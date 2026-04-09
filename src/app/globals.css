@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+:root {
+  /* --text: #0e0b24;
+  --background: #f6f6f6;
+  --primary: #1b0e7d;
+  --secondary: #958cdb;
+  --accent: #3c2dab; */
+  --text: #0e0b24;
+  --background: #f6f5fa;
+
+  --dark-bg: #0e0b24;
+  --dark-secondary-0: #1a1830;
+  --dark-secondary: #1f1d3a;
+  --dark-secondary-1: #262346;
+  --dark-primary-0: #5b577d;
+  --dark-primary: #4b476a;
+
+  --text-1: #4B476A;
+  --text-2: #494759;
+  --text-3: #6b697e;
+  --text-4: #cdcdcd;
+
+  --background-2: #ececec;
+  --primary: #3c2dab;
+  --secondary-gray: #f7f7f7;
+  --secondary-purple: #E1DFED;
+  --accent: #5c4bce;
+  --border: #e5e7eb;
+}
+
+
+@theme inline {
+  /* --color-text: var(--text);
+  --color-background: var(--background);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono); */
+  --color-text: var(--text);
+  --color-background: var(--background);
+  --color-background-2: var(--background-2);
+
+  --color-primary: var(--primary);
+  --color-secondary-gray: var(--secondary-gray);
+  --color-secondary-purple: var(--secondary-purple);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+
+  --color-dark-bg: var(--dark-bg);
+  --color-dark-secondary-0: var(--dark-secondary-0);
+  --color-dark-secondary: var(--dark-secondary);
+  --color-dark-secondary-1: var(--dark-secondary-1);
+  --color-dark-primary-0: var(--dark-primary-0);
+  --color-dark-primary: var(--dark-primary);
+
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-text-4: var(--text-4);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #dfdcf4;
+    --background: #0E0B24;
+    --primary: #9083f1;
+    --secondary: #2e2574;
+    --accent: #6456d2;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--text);
+}
+
+img {
+  background-color: lightslategray;
+  object-fit: cover;
+}
+
