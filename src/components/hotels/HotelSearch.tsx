@@ -16,7 +16,7 @@ export default function HotelSearch({ name, province, setName, setProvince, onSe
     <div className="flex p-4 gap-4 justify-between rounded-3xl bg-secondary dark:bg-dark-secondary">
       <div className="grid gap-3 md:col-span-2 md:grid-cols-2">
         <input
-          className="w-full rounded-l-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 placeholder:text-slate-400 placeholder:italic focus:border-indigo-500 focus:bg-white focus:outline-none
+          className="w-full rounded-r-lg rounded-l-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 placeholder:text-slate-400 placeholder:italic focus:border-indigo-500 focus:bg-white focus:outline-none
           dark:bg-dark-primary dark:border-dark-secondary-1 dark:placeholder:text-secondary-gray dark:text-secondary-gray dark:focus:bg-dark-secondary"
           placeholder="Hotel Name"
           value={name}
@@ -24,7 +24,7 @@ export default function HotelSearch({ name, province, setName, setProvince, onSe
         />
 
         <select
-          className={`w-full rounded-r-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 focus:border-indigo-500
+          className={`w-full rounded-r-2xl rounded-l-lg border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 focus:border-indigo-500
           dark:bg-dark-primary dark:border-dark-secondary-1 dark:placeholder:text-secondary-gray dark:text-secondary-gray dark:focus:bg-dark-secondary
           focus:bg-white focus:outline-none ${province ? "text-slate-700" : "text-slate-400 italic"}`}
           value={province}

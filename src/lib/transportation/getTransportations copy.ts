@@ -11,7 +11,7 @@ interface LoadTransportationProps {
   limit?: number;
 }
 
-export default async function getTransportations({ name, providerName, type, province, page, limit }: LoadTransportationProps = {}): Promise<PaginatedApiResponse<Transportation[]>> {
+export default async function getTransportations(token: string, { name, providerName, type, province, page, limit }: LoadTransportationProps = {}): Promise<PaginatedApiResponse<Transportation[]>> {
   try {
     const query = new URLSearchParams();
     if (name) query.set("name", name);
@@ -23,6 +23,9 @@ export default async function getTransportations({ name, providerName, type, pro
 
     const res = await fetch(`${BACKEND_URL}/api/v1/transportations?${query}`, {
       cache: "no-cache",
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
     });
 
     const data: PaginatedApiResponse<Transportation[]> = await res.json();

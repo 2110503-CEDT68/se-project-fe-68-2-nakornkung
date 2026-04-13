@@ -15,14 +15,15 @@ interface TransportSearchProps {
   setProvider: (provider: string) => void;
   setType: (type: TransportationType | "") => void;
   setProvince: (province: string) => void;
+  automatic?: boolean;
 }
 
-export default function TransportSearch({ name, provider, type, province, setName, setProvider, setType, setProvince }: TransportSearchProps) {
+export default function TransportSearch({ name, provider, type, province, setName, setProvider, setType, setProvince, automatic }: TransportSearchProps) {
   return (
     <div className="flex p-4 gap-4 justify-between rounded-3xl bg-secondary dark:bg-dark-secondary">
-      <div className="grid gap-3 md:col-span-2 md:grid-cols-2">
+      <div className="grid gap-3 md:col-span-4 md:grid-cols-4">
         <input
-          className="w-full rounded-l-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 placeholder:text-slate-400 placeholder:italic focus:border-indigo-500 focus:bg-white focus:outline-none
+          className="w-full rounded-l-2xl rounded-r-lg border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 placeholder:text-slate-400 placeholder:italic focus:border-indigo-500 focus:bg-white focus:outline-none
           dark:bg-dark-primary dark:border-dark-secondary-1 dark:placeholder:text-secondary-gray dark:text-secondary-gray dark:focus:bg-dark-secondary"
           placeholder="Transport Name"
           value={name}
@@ -30,7 +31,7 @@ export default function TransportSearch({ name, provider, type, province, setNam
         />
 
         <input
-          className="w-full rounded-r-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 placeholder:text-slate-400 placeholder:italic focus:border-indigo-500 focus:bg-white focus:outline-none
+          className="w-full rounded-l-lg rounded-r-lg border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 placeholder:text-slate-400 placeholder:italic focus:border-indigo-500 focus:bg-white focus:outline-none
           dark:bg-dark-primary dark:border-dark-secondary-1 dark:placeholder:text-secondary-gray dark:text-secondary-gray dark:focus:bg-dark-secondary"
           placeholder="Provider Name"
           value={provider}
@@ -38,7 +39,7 @@ export default function TransportSearch({ name, provider, type, province, setNam
         />
 
         <select
-          className={`w-full rounded-l-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 focus:border-indigo-500
+          className={`w-full rounded-l-lg rounded-r-lg border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 focus:border-indigo-500
           dark:bg-dark-primary dark:border-dark-secondary-1 dark:placeholder:text-secondary-gray dark:text-secondary-gray dark:focus:bg-dark-secondary
           focus:bg-white focus:outline-none ${type ? "text-slate-700" : "text-slate-400 italic"}`}
           value={type}
@@ -50,7 +51,7 @@ export default function TransportSearch({ name, provider, type, province, setNam
         </select>
 
         <select
-          className={`w-full rounded-r-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 focus:border-indigo-500
+          className={`w-full rounded-l-lg rounded-r-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 focus:border-indigo-500
           dark:bg-dark-primary dark:border-dark-secondary-1 dark:placeholder:text-secondary-gray dark:text-secondary-gray dark:focus:bg-dark-secondary
           focus:bg-white focus:outline-none ${province ? "text-slate-700" : "text-slate-400 italic"}`}
           value={province}
