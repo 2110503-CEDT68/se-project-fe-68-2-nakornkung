@@ -46,14 +46,26 @@ export default function ManageTransportPanel() {
     loadTransportations();
   }, [session, nameQuery, providerQuery, transportType, province, page, limit]);
 
-  const handleDelete = async (id: string) => {
-    if (!session?.user.token) return;
-    try {
-      await deleteTransportation(id, session?.user.token);
-    } catch (err) {
-      console.error("Error while deleting transportation:", err)
+const handleDelete = async (id: string) => {
+  if (!session?.user.token) return;
+
+  try {
+    const res = await deleteTransportation(id, session.user.token);
+
+    if (!res.success) {
+      alert(`Delete failed: ${res.message}`);
+      return;
     }
-  };
+
+    setTransports((prev) =>
+      prev.filter((transport) => transport._id !== id)
+    );
+    setTotal((prev) => Math.max(prev - 1, 0));
+  } catch (err) {
+    console.error("Error while deleting transportation:", err);
+    alert("Something went wrong while deleting transportation.");
+  }
+};
 
   if (!session) {
     return <Loading />
