@@ -55,7 +55,7 @@ export default function NavBar({ initialAuthenticated = false }: NavBarProps) {
         {session?.user.role === "admin" && (
           <NavBarItem><Link href="/admin">Admin</Link></NavBarItem>
         )}
-        <NavBarItem><Link href="/transportations">Transportations</Link></NavBarItem>
+        {/* <NavBarItem><Link href="/transportations">Transportations</Link></NavBarItem> */}
         <NavBarItem><Link href="/hotels">Hotels</Link></NavBarItem>
         <NavBarItem><Link href="/booking">Booking</Link></NavBarItem>
         {
