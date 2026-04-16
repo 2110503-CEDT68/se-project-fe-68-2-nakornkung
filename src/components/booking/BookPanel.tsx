@@ -8,6 +8,7 @@ import { SummaryBooking } from "@/interface/Booking";
 import { useSession } from "next-auth/react";
 import getHotel from "@/lib/hotels/getHotel";
 import { getNumberOfNights } from "@/util/getNumberOfNights";
+import TransportationBookingSection from "@/components/transport/TransportationBookingSection";
 
 export default function BookingPanel() {
 
@@ -100,59 +101,63 @@ export default function BookingPanel() {
     return (
         <form
             onSubmit={handleSubmit}
-            className="grid grid-cols-2 gap-4 w-full p-10 border border-slate-300 rounded-2xl bg-white shadow-md dark:bg-dark-secondary dark:border-none"
+            className="flex flex-col gap-4 w-full p-10 border border-slate-300 rounded-2xl bg-white shadow-md dark:bg-dark-secondary dark:border-none"
         >
-            <div className="flex flex-col gap-4 space-y-3">
-                <div className="flex flex-col">
-                    <label className="font-semibold text-text-3 mb-1 dark:text-text-4">Hotel</label>
-                    <input
-                        type="text"
-                        className="p-3 border border-gray-300 rounded-xl bg-secondary-gray focus:outline-none 
-                        dark:bg-dark-secondary-0 dark:border-none"
-                        placeholder={hotelName ? "" : loadingHotel ? "Loading hotel..." : "No hotel selected"}
-                        value={hotelName}
-                        onChange={(e) => setHotelName(e.target.value)}
-                        readOnly
-                    />
+            <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-4 space-y-3">
+                    <div className="flex flex-col">
+                        <label className="font-semibold text-text-3 mb-1 dark:text-text-4">Hotel</label>
+                        <input
+                            type="text"
+                            className="p-3 border border-gray-300 rounded-xl bg-secondary-gray focus:outline-none 
+                            dark:bg-dark-secondary-0 dark:border-none"
+                            placeholder={hotelName ? "" : loadingHotel ? "Loading hotel..." : "No hotel selected"}
+                            value={hotelName}
+                            onChange={(e) => setHotelName(e.target.value)}
+                            readOnly
+                        />
+                    </div>
+                    <div className="flex flex-col">
+                        <label className="font-semibold text-text-3 mb-1 dark:text-text-4">Check-in Date</label>
+                        <input
+                            type="date"
+                            className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary
+                            dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary dark:scheme-dark"
+                            value={checkInDate}
+                            onChange={(e) => setCheckInDate(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="flex flex-col">
+                        <label className="font-semibold text-text-3 mb-1 dark:text-text-4">Check-out Date</label>
+                        <input
+                            type="date"
+                            className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary
+                            dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary dark:scheme-dark"
+                            value={checkOutDate}
+                            onChange={(e) => setCheckOutDate(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="font-semibold text-gray-700 dark:text-text-4">
+                        Number of Nights: {Number.isNaN(numberOfNights) || numberOfNights < 0 ? "" : numberOfNights}
+                    </div>
                 </div>
-                <div className="flex flex-col">
-                    <label className="font-semibold text-text-3 mb-1 dark:text-text-4">Check-in Date</label>
-                    <input
-                        type="date"
-                        className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary
-                        dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary"
-                        value={checkInDate}
-                        onChange={(e) => setCheckInDate(e.target.value)}
-                        required
+
+                <div className="relative h-64 rounded-4xl overflow-hidden select-none mt-4">
+                    <Image
+                        src={hotelImage || "/banner.jpg"}
+                        alt={`Image of ${hotelName || "hotel"}`}
+                        fill
+                        objectFit="cover"
                     />
-                </div>
-                <div className="flex flex-col">
-                    <label className="font-semibold text-text-3 mb-1 dark:text-text-4">Check-out Date</label>
-                    <input
-                        type="date"
-                        className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 
-                        dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary"
-                        value={checkOutDate}
-                        onChange={(e) => setCheckOutDate(e.target.value)}
-                        required
-                    />
-                </div>
-                <div className="font-semibold text-gray-700 dark:text-text-4">
-                    Number of Nights: {Number.isNaN(numberOfNights) || numberOfNights < 0 ? "" : numberOfNights}
                 </div>
             </div>
 
-            <div className="relative h-64 rounded-4xl overflow-hidden select-none mt-4">
-                <Image
-                    src={hotelImage || "/banner.jpg"}
-                    alt={`Image of ${hotelName || "hotel"}`}
-                    fill
-                    objectFit="cover"
-                />
-            </div>
+            <TransportationBookingSection />
 
             {errorMessage && (
-                <div className="col-span-2 text-center">
+                <div className="text-center">
                     <p className="text-red-500 font-semibold text-sm">
                         {errorMessage}
                     </p>
@@ -160,14 +165,14 @@ export default function BookingPanel() {
             )}
 
             {successMessage && (
-                <div className="col-span-2 text-center">
+                <div className="text-center">
                     <p className="text-text-2 font-semibold text-sm">
                         {successMessage}
                     </p>
                 </div>
             )}
 
-            <div className="col-span-2 flex justify-center">
+            <div className="flex justify-center">
                 <button
                     type="submit"
                     className="px-8 py-2 bg-primary text-white font-semibold rounded-xl hover:bg-accent focus:outline-none transition duration-200 dark:bg-dark-primary dark:hover:bg-dark-secondary-0 dark:hover:shadow-[0_2px_10px_rgba(255,255,255,0.1)]"
