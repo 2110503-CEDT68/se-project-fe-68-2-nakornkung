@@ -3,21 +3,20 @@
 import TransportationBookingCard from "@/components/transport/TransportationBookingCard";
 import TransportLocationTooltip from "@/components/transport/TransportLocationTooltip";
 import { Transportation } from "@/interface/Transportation";
+import { TransportBookingInfo } from "@/interface/TransportationBooking";
 import getTransportations from "@/lib/transportation/getTransportations";
 import capitalize from "@/util/capitalize";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
-interface TransportBookingInfo {
-  transport: Transportation;
-  departure: string;
-  passengerNumber: string;
+interface TransportationBookingSectionProps {
+  bookings: TransportBookingInfo[];
+  setBookings: Dispatch<SetStateAction<TransportBookingInfo[]>>
 }
 
-export default function TransportationBookingSection() {
+export default function TransportationBookingSection({ bookings, setBookings }: TransportationBookingSectionProps) {
   const { data: session } = useSession();
   const [transports, setTransports] = useState<Transportation[]>([]);
-  const [bookings, setBookings] = useState<TransportBookingInfo[]>([]);
   const [isExpanded, setExpanded] = useState(false);
 
   useEffect(() => {
@@ -34,7 +33,7 @@ export default function TransportationBookingSection() {
   }, [session]);
 
   const handleBook = (transport: Transportation) => {
-    setBookings([...bookings, { transport, departure: "", passengerNumber: "" }]);
+    setBookings((state) => [...state, { transport, departure: "", passengerNumber: "" }]);
   };
 
   return (
@@ -55,7 +54,7 @@ export default function TransportationBookingSection() {
                     className="p-2 w-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary
                     dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary dark:scheme-dark"
                     value={transportBooking.departure}
-                    onChange={(e) => setBookings(bookings.with(i, { ...transportBooking, departure: e.target.value }))}
+                    onChange={(e) => setBookings((state) => state.with(i, { ...transportBooking, departure: e.target.value }))}
                     required
                   />
                 </div>
@@ -66,15 +65,15 @@ export default function TransportationBookingSection() {
                     className="p-2 w-18 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary
                     dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary"
                     value={transportBooking.passengerNumber}
-                    onChange={(e) => setBookings(bookings.with(i, { ...transportBooking, passengerNumber: e.target.value }))}
-                    onBlur={(e) => setBookings(bookings.with(i, { ...transportBooking, passengerNumber: String(Math.min(Math.max(Math.trunc(e.target.valueAsNumber) || 0, 1), 2000)) }))}
+                    onChange={(e) => setBookings((state) => state.with(i, { ...transportBooking, passengerNumber: e.target.value }))}
+                    onBlur={(e) => setBookings((state) => state.with(i, { ...transportBooking, passengerNumber: String(Math.min(Math.max(Math.trunc(e.target.valueAsNumber) || 0, 1), 2000)) }))}
                     min={1}
                     required
                   />
                   {Math.min(Math.max(Math.trunc(Number(transportBooking.passengerNumber)), 0), 2000) * transportBooking.transport.price}฿
                 </div>
                 <div className="grow" />
-                <div onClick={() => confirm("Delete transportation booking?") && setBookings((bookings) => bookings.filter((_, idx) => idx !== i))}>
+                <div onClick={() => confirm("Delete transportation booking?") && setBookings((state) => state.filter((_, idx) => idx !== i))}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="fill-none stroke-current hover:stroke-red-500 transition-colors" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                 </div>
               </div>

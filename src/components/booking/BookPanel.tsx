@@ -9,6 +9,8 @@ import { useSession } from "next-auth/react";
 import getHotel from "@/lib/hotels/getHotel";
 import { getNumberOfNights } from "@/util/getNumberOfNights";
 import TransportationBookingSection from "@/components/transport/TransportationBookingSection";
+import { TransportBookingInfo } from "@/interface/TransportationBooking";
+import createTransportationBooking from "@/lib/transportationBooking/createTransportation";
 
 export default function BookingPanel() {
 
@@ -21,6 +23,7 @@ export default function BookingPanel() {
     const [checkInDate, setCheckInDate] = useState<string>("");
     const [checkOutDate, setCheckOutDate] = useState<string>("");
     const [hotelImage, setHotelImage] = useState<string>("");
+    const [transportBookings, setTransportBookings] = useState<TransportBookingInfo[]>([]);
     
     const [errorMessage, setErrorMessage] = useState<string>("");
     const [loadingHotel, setLoadingHotel] = useState<boolean>(false);
@@ -85,10 +88,19 @@ export default function BookingPanel() {
             const createResult = await createBooking(booking, session.user.token);
 
             if (createResult.success) {
-                setSuccessMessage(`Booking ${hotelName} from ${checkInDate} to ${checkOutDate} (${numberOfNights} nights) success!`);
-                setTimeout(() => {
-                    router.push('/booking');
-                }, 2500);
+                const bookingId = createResult.data._id;
+                const transportBookingResults = await Promise.all(transportBookings.map(async (transportBooking) => {
+                    return createTransportationBooking(bookingId, transportBooking, session.user.token);
+                }));
+                const errors = transportBookingResults.filter((res) => !res.success).map((res) => res.message);
+                if (errors.length === 0) {
+                    setSuccessMessage(`Booking ${hotelName} from ${checkInDate} to ${checkOutDate} (${numberOfNights} nights) with ${transportBookings.length} transport bookings success!`);
+                    setTimeout(() => {
+                        router.push('/booking');
+                    }, 2500);
+                } else {
+                    setErrorMessage(errors.join("\n") || "Failed to create transport bookings. Please try again.");
+                }
             } else {
                 setErrorMessage(createResult.message || "Failed to create booking. Please try again.");
             }
@@ -154,7 +166,7 @@ export default function BookingPanel() {
                 </div>
             </div>
 
-            <TransportationBookingSection />
+            <TransportationBookingSection bookings={transportBookings} setBookings={setTransportBookings} />
 
             {errorMessage && (
                 <div className="text-center">
