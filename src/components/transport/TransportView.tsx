@@ -9,8 +9,10 @@ import type { Transportation } from "@/interface/Transportation";
 import PaginationControls from "@/components/PaginationControls";
 import Loading from "@/components/Loading";
 import { TransportationType } from "@/interface/Transportation";
+import { useSession } from "next-auth/react";
 
 export default function TransportView({ name: defaultName, provider: defaultProvider, type: defaultType, province: defaultProvince }: { name: string, provider: string, type: TransportationType, province: string }) {
+  const { data: session } = useSession();
   const [name, setName] = useState(defaultName);
   const [province, setProvince] = useState(defaultProvince);
   const [provider, setProvider] = useState(defaultProvider);
@@ -25,9 +27,10 @@ export default function TransportView({ name: defaultName, provider: defaultProv
   const nameQuery = useDebounceSearch(name);
 
   useEffect(() => {
+    if (!session) return;
     const loadTransportations = async () => {
       setLoading(true);
-      const res = await getTransportations({ name: nameQuery, providerName: provider, type, province, page, limit });
+      const res = await getTransportations(session.user.token, { name: nameQuery, providerName: provider, type, province, page, limit });
       if (!res.success) {
         console.error("Error while loading transportations:", res.message);
         return;
@@ -39,7 +42,7 @@ export default function TransportView({ name: defaultName, provider: defaultProv
       setFirstLoad(false);
     };
     loadTransportations();
-  }, [nameQuery, provider, type, province, page, limit]);
+  }, [session, nameQuery, provider, type, province, page, limit]);
 
   return (
     <main className="flex my-8 px-10 w-full xl:w-7/8 gap-8 flex-col items-center">

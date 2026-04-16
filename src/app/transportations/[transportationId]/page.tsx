@@ -7,14 +7,17 @@ import Link from "next/link";
 import { Transportation } from "@/interface/Transportation";
 import getTransportation from "@/lib/transportation/getTransportation";
 import Loading from "@/components/Loading";
+import { useSession } from "next-auth/react";
 
 export default function TransportationPage() {
+  const { data: session } = useSession();
   const { transportationId } = useParams<{ transportationId: string }>();
   const [transportation, setTransportation] = useState<Transportation | null>(null);
   
   useEffect(() => {
+    if (!session) return;
     const loadTransportation = async () => {
-      const res = await getTransportation(transportationId);
+      const res = await getTransportation(session.user.token, transportationId);
       if (!res.success) {
         console.error("Error while loading transportation:", res.message);
         return;
@@ -22,7 +25,7 @@ export default function TransportationPage() {
       setTransportation(res.data);
     };
     loadTransportation();
-  }, [transportationId]);
+  }, [session, transportationId]);
 
   if (!transportation) {
     return (
