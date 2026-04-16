@@ -5,7 +5,7 @@ interface Address {
   postalCode: string;
 }
 
-interface Location {
+export interface Location {
   name: string;
   address: Address;
 }

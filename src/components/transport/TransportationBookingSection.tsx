@@ -1,6 +1,7 @@
 "use client";
 
 import TransportationBookingCard from "@/components/transport/TransportationBookingCard";
+import TransportLocationTooltip from "@/components/transport/TransportLocationTooltip";
 import { Transportation } from "@/interface/Transportation";
 import getTransportations from "@/lib/transportation/getTransportations";
 import capitalize from "@/util/capitalize";
@@ -17,7 +18,7 @@ export default function TransportationBookingSection() {
   const { data: session } = useSession();
   const [transports, setTransports] = useState<Transportation[]>([]);
   const [bookings, setBookings] = useState<TransportBookingInfo[]>([]);
-  const [isCollapsed, setCollapsed] = useState(false);
+  const [isExpanded, setExpanded] = useState(false);
 
   useEffect(() => {
     if (!session) return;
@@ -28,10 +29,13 @@ export default function TransportationBookingSection() {
         return;
       }
       setTransports(res.data);
-      setBookings([{ transport: res.data[0], departure: "", passengerNumber: "4" }]) //--temp
     };
     loadTransports();
   }, [session]);
+
+  const handleBook = (transport: Transportation) => {
+    setBookings([...bookings, { transport, departure: "", passengerNumber: "" }]);
+  };
 
   return (
     <div className="p-4 flex flex-col gap-2 rounded-2xl border border-gray-300 bg-secondary-gray dark:bg-dark-secondary-0 dark:border-none">
@@ -42,7 +46,7 @@ export default function TransportationBookingSection() {
           {bookings.map((transportBooking, i) => (
             <li key={i} className="flex flex-col gap-2">
               <div className="font-semibold">
-                {transportBooking.transport.name} by {transportBooking.transport.providerName} ({capitalize(transportBooking.transport.type)})
+                {transportBooking.transport.name} by {transportBooking.transport.providerName} ({capitalize(transportBooking.transport.type)}): <TransportLocationTooltip location={transportBooking.transport.pickUpArea} /> to <TransportLocationTooltip location={transportBooking.transport.dropOffArea} />
               </div>
               <div className="flex gap-4 items-center ml-4">
                 <div>
@@ -79,14 +83,14 @@ export default function TransportationBookingSection() {
         </ul>
       </div>
       <div className="rounded-xl border border-gray-300 dark:bg-dark-secondary-1 dark:border-none">
-        <div className="p-4 pl-6 flex gap-4" onClick={() => setCollapsed(!isCollapsed)}>
-          <div>{isCollapsed ? "v" : ">"}</div>
+        <div className="p-4 pl-6 flex gap-4" onClick={() => setExpanded(!isExpanded)}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className={`fill-none stroke-current transition-transform ${isExpanded ? "rotate-90" : ""}`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           <div>Add new booking</div>
         </div>
 
-        {isCollapsed && (
-          <div className="p-4 pt-0">
-            {transports.map((transport) => <TransportationBookingCard key={transport._id} />)}
+        {isExpanded && (
+          <div className="flex gap-4 p-4 pt-0 overflow-x-auto">
+            {transports.map((transport) => <TransportationBookingCard key={transport._id} transport={transport} handleBook={handleBook} />)}
           </div>
         )}
       </div>
