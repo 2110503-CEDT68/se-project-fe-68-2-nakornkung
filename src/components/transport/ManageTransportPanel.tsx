@@ -10,6 +10,7 @@ import TransportSearch from "@/components/transport/TransportSearch";
 import getTransportations from "@/lib/transportation/getTransportations";
 import TransportCard from "@/components/transport/TransportCard";
 import deleteTransportation from "@/lib/transportation/deleteTransportation";
+import updateTransportation from "@/lib/transportation/updateTransportation"
 import Link from "next/link";
 
 export default function ManageTransportPanel() {
@@ -24,6 +25,7 @@ export default function ManageTransportPanel() {
   const [total, setTotal] = useState(0);
   const [isLoading, setLoading] = useState(true);
   const [firstLoad, setFirstLoad] = useState(true);
+  const [transportations, setTransportations] = useState<Transportation[]>([]);
 
   const nameQuery = useDebounceSearch(name);
   const providerQuery = useDebounceSearch(provider);
@@ -66,6 +68,28 @@ const handleDelete = async (id: string) => {
     alert("Something went wrong while deleting transportation.");
   }
 };
+const handleEdit = async (transportId:string, formData:any) => {
+      if (!session) return;
+      try {
+        const token = session.user.token;
+        const res = await updateTransportation(transportId,formData, token);
+        if (!res.success) throw new Error(res.message);
+  
+        // Update local state
+        setTransportations((currentItems) => 
+          currentItems.map((item) =>
+            item._id === transportId
+              ? { ...item, ...formData } // เอา formData ที่แก้ใหม่ ไปทับข้อมูลเดิม
+              : item
+          )
+        );
+  
+      } catch (error) {
+        console.error("Error updating transportation:", error);
+        alert(error instanceof Error ? error.message : "Failed to update transportation");
+        throw error;
+      }
+    };
 
   if (!session) {
     return <Loading />
@@ -94,7 +118,7 @@ const handleDelete = async (id: string) => {
       ) : (
         <div className="flex w-full gap-4 flex-col">
           {transports.map((transport) => (
-            <TransportCard key={transport._id} transport={transport} onDelete={handleDelete} />
+            <TransportCard key={transport._id} transport={transport} onDelete={handleDelete} onEdit={handleEdit}/>
           ))}
         </div>
       )}

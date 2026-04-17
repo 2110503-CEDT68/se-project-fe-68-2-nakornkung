@@ -5,10 +5,9 @@ import TransportSearch from "./TransportSearch";
 import TransportCard from "./TransportCard";
 import getTransportations from "@/lib/transportation/getTransportations";
 import { useDebounceSearch } from "@/util/useDebounceSearch";
-import type { Transportation } from "@/interface/Transportation";
+import type { Transportation ,TransportationType} from "@/interface/Transportation";
 import PaginationControls from "@/components/PaginationControls";
 import Loading from "@/components/Loading";
-import { TransportationType } from "@/interface/Transportation";
 import { useSession } from "next-auth/react";
 
 export default function TransportView({ name: defaultName, provider: defaultProvider, type: defaultType, province: defaultProvince }: { name: string, provider: string, type: TransportationType, province: string }) {
@@ -19,12 +18,14 @@ export default function TransportView({ name: defaultName, provider: defaultProv
   const [type, setType] = useState<TransportationType | "">(defaultType);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [transportations, setTransportations] = useState<Transportation[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setLoading] = useState(true);
   const [firstLoad, setFirstLoad] = useState(true);
+  const [transportations, setTransportations] = useState<Transportation[]>([]);
 
   const nameQuery = useDebounceSearch(name);
+
+  
 
   useEffect(() => {
     if (!session) return;
@@ -65,7 +66,9 @@ export default function TransportView({ name: defaultName, provider: defaultProv
         <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {transportations.map((transport) => (
             <TransportCard key={transport._id} transport={transport} 
-            onDelete={(id) => console.log("Deleting:", id)}/>
+            onDelete={(id) => console.log("Deleting:", id)}
+            onEdit={(id) => console.log("Updating:", id)}
+            />
           ))}
         </div>
       )}
