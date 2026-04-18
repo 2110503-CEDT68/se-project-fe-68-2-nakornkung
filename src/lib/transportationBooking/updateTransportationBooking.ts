@@ -4,7 +4,6 @@ import { BACKEND_URL } from "@/lib/consts";
 
 interface UpdateTransportationBookingProps {
   departureDateTime: string;
-  returnDateTime: string;
   passengerNumber: number;
 }
 

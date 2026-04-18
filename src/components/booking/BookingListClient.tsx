@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import BookingCard from "@/components/booking/BookingCard";
 import type Booking from "@/interface/Booking";
 import type { TransportationBooking } from "@/interface/TransportationBooking";
-import type { Transportation } from "@/interface/Transportation";
 import deleteBooking from "@/lib/bookings/deleteBooking";
 import updateBooking from "@/lib/bookings/updateBooking";
 import getTransportationBookings from "@/lib/transportationBooking/getTransportationBookings";
@@ -30,24 +29,65 @@ export default function BookingListClient({ items: initialItems, onUpdate }: Boo
     });
   }, [session?.user?.token]);
 
-  const handleEdit = async (bookingId: string, checkInDate: string, checkOutDate: string) => {
+  // Single save handler — reconciles dates + transport bookings all at once,
+  // mirroring how BookPanel's handleSubmit fires everything off together.
+  const handleSave = async (
+    bookingId: string,
+    checkInDate: string,
+    checkOutDate: string,
+    pendingTransportBookings: TransportationBooking[],
+    originalTransportBookings: TransportationBooking[]
+  ) => {
     if (!session) return;
-    try {
-      const res = await updateBooking(bookingId, { checkInDate, checkOutDate }, session.user.token);
-      if (!res.success) throw new Error(res.message);
 
-      setItems((current) =>
-        current.map((item) =>
-          item._id === bookingId ? { ...item, checkInDate, checkOutDate } : item
+    const res = await updateBooking(bookingId, { checkInDate, checkOutDate }, session.user.token);
+    if (!res.success) throw new Error(res.message);
+
+    const originalIds = new Set(originalTransportBookings.map((tb) => tb._id));
+    const pendingIds = new Set(pendingTransportBookings.map((tb) => tb._id));
+
+    const toDelete = originalTransportBookings.filter((tb) => !pendingIds.has(tb._id));
+
+    const toCreate = pendingTransportBookings.filter((tb) => tb._id.startsWith("temp-"));
+
+    const toUpdate = pendingTransportBookings.filter(
+      (tb) => !tb._id.startsWith("temp-") && originalIds.has(tb._id)
+    );
+
+    const results = await Promise.all([
+      ...toDelete.map((tb) => deleteTransportationBooking(session.user.token, tb._id)),
+      ...toCreate.map((tb) =>
+        createTransportationBooking(
+          bookingId,
+          {
+            transport: tb.transportation,
+            departure: tb.departureDateTime,
+            passengerNumber: String(tb.passengerNumber),
+          },
+          session.user.token
         )
-      );
+      ),
+      ...toUpdate.map((tb) =>
+        updateTransportationBooking(session.user.token, tb._id, {
+          departureDateTime: tb.departureDateTime,
+          passengerNumber: tb.passengerNumber,
+        })
+      ),
+    ]);
 
-      if (onUpdate) await onUpdate();
-    } catch (error) {
-      console.error("Error updating booking:", error);
-      alert(error instanceof Error ? error.message : "Failed to update booking");
-      throw error;
-    }
+    const errors = results.filter((r) => !r.success).map((r) => r.message);
+    if (errors.length > 0) throw new Error(errors.join("\n"));
+
+    const fresh = await getTransportationBookings(session.user.token);
+    if (fresh.success) setTransportBookings(fresh.data);
+
+    setItems((current) =>
+      current.map((item) =>
+        item._id === bookingId ? { ...item, checkInDate, checkOutDate } : item
+      )
+    );
+
+    if (onUpdate) await onUpdate();
   };
 
   const handleDelete = async (bookingId: string) => {
@@ -66,72 +106,6 @@ export default function BookingListClient({ items: initialItems, onUpdate }: Boo
     }
   };
 
-  const handleEditTransport = async (
-    transportBookingId: string,
-    departureDateTime: string,
-    returnDateTime: string,
-    passengerNumber: number
-  ) => {
-    if (!session) return;
-    try {
-      const res = await updateTransportationBooking(session.user.token, transportBookingId, {
-        departureDateTime,
-        returnDateTime,
-        passengerNumber,
-      });
-      if (!res.success) throw new Error(res.message);
-
-      setTransportBookings((current) =>
-        current.map((tb) =>
-          tb._id === transportBookingId
-            ? { ...tb, departureDateTime, returnDateTime, passengerNumber }
-            : tb
-        )
-      );
-    } catch (error) {
-      console.error("Error updating transport booking:", error);
-      alert(error instanceof Error ? error.message : "Failed to update transport booking");
-      throw error;
-    }
-  };
-
-  const handleDeleteTransport = async (transportBookingId: string) => {
-    if (!session) return;
-    try {
-      const res = await deleteTransportationBooking(session.user.token, transportBookingId);
-      if (!res.success) throw new Error(res.message);
-
-      setTransportBookings((current) => current.filter((tb) => tb._id !== transportBookingId));
-    } catch (error) {
-      console.error("Error deleting transport booking:", error);
-      alert(error instanceof Error ? error.message : "Failed to delete transport booking");
-      throw error;
-    }
-  };
-
-  const handleAddTransport = (bookingId: string) => async (
-    transport: Transportation,
-    departure: string,
-    returnDT: string,
-    passengers: number
-  ) => {
-    if (!session) return;
-    try {
-      const res = await createTransportationBooking(
-        bookingId,
-        { transport, departure, passengerNumber: String(passengers) },
-        session.user.token
-      );
-      if (!res.success) throw new Error(res.message);
-
-      setTransportBookings((current) => [...current, res.data]);
-    } catch (error) {
-      console.error("Error creating transport booking:", error);
-      alert(error instanceof Error ? error.message : "Failed to create transport booking");
-      throw error;
-    }
-  };
-
   return (
     <div className="flex flex-col gap-4">
       {items.map((booking) => (
@@ -140,11 +114,8 @@ export default function BookingListClient({ items: initialItems, onUpdate }: Boo
           booking={booking}
           hotel={booking.hotel}
           transportBookings={transportBookings.filter((tb) => tb.booking === booking._id)}
-          onEdit={handleEdit}
+          onSave={handleSave}
           onDelete={handleDelete}
-          onEditTransport={handleEditTransport}
-          onDeleteTransport={handleDeleteTransport}
-          onAddTransport={handleAddTransport(booking._id)}
         />
       ))}
       {items.length === 0 && (
