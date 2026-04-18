@@ -336,11 +336,6 @@ export default function TransportationBookingSection({
                 </label>
                 <label className="flex flex-col gap-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
                   <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
-                    Return (Optional) :
-                  </span>
-                </label>
-                <label className="flex flex-col gap-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
-                  <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
                     Passengers :
                   </span>
                   <input

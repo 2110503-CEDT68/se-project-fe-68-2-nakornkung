@@ -60,7 +60,6 @@ export default function BookingPanel() {
     const handleAddTransport = async (
         transport: Transportation,
         departure: string,
-        returnDT: string,
         passengers: number
     ) => {
         const newBooking = {
@@ -68,7 +67,6 @@ export default function BookingPanel() {
             booking: "", // No hotel booking ID yet
             transportation: transport,
             departureDateTime: departure,
-            returnDateTime: returnDT,
             passengerNumber: passengers,
         } as TransportationBooking;
         setTransportBookings((prev) => [...prev, newBooking]);
@@ -77,13 +75,12 @@ export default function BookingPanel() {
     const handleEditTransport = async (
         transportBookingId: string,
         departureDateTime: string,
-        returnDateTime: string,
         passengerNumber: number
     ) => {
         setTransportBookings((prev) =>
             prev.map((tb) =>
                 tb._id === transportBookingId
-                    ? { ...tb, departureDateTime, returnDateTime, passengerNumber }
+                    ? { ...tb, departureDateTime, passengerNumber }
                     : tb
             )
         );
