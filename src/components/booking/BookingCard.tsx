@@ -1,9 +1,12 @@
 "use client";
 import type Hotel from "@/interface/Hotel";
 import type Booking from "@/interface/Booking";
+import type { TransportationBooking } from "@/interface/TransportationBooking";
+import type { Transportation } from "@/interface/Transportation";
 import Image from "next/image";
 import { useState } from "react";
 import { getNumberOfNights } from "@/util/getNumberOfNights";
+import TransportationBookingSection from "@/components/transport/TransportationBookingSection";
 
 const dateLocale = Intl.DateTimeFormat("en-TH", {
   day: "numeric",
@@ -14,11 +17,34 @@ const dateLocale = Intl.DateTimeFormat("en-TH", {
 type BookingCardProps = {
   booking: Booking;
   hotel: Hotel;
+  transportBookings?: TransportationBooking[];
   onEdit?: (bookingId: string, checkInDate: string, checkOutDate: string) => Promise<void>;
   onDelete?: (bookingId: string) => Promise<void>;
+  onEditTransport?: (
+    transportBookingId: string,
+    departureDateTime: string,
+    returnDateTime: string,
+    passengerNumber: number
+  ) => Promise<void>;
+  onDeleteTransport?: (transportBookingId: string) => Promise<void>;
+  onAddTransport?: (
+    transport: Transportation,
+    departure: string,
+    returnDT: string,
+    passengers: number
+  ) => Promise<void>;
 };
 
-export default function BookingCard({ booking, hotel, onEdit, onDelete }: BookingCardProps) {
+export default function BookingCard({
+  booking,
+  hotel,
+  transportBookings = [],
+  onEdit,
+  onDelete,
+  onEditTransport,
+  onDeleteTransport,
+  onAddTransport,
+}: BookingCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [checkInDate, setCheckInDate] = useState(booking.checkInDate.split("T")[0]);
   const [checkOutDate, setCheckOutDate] = useState(booking.checkOutDate.split("T")[0]);
@@ -77,7 +103,7 @@ export default function BookingCard({ booking, hotel, onEdit, onDelete }: Bookin
         />
       </div>
 
-      <div className="min-w-0 space-y-1 ml-15 ">
+      <div className="min-w-0 space-y-1 ml-15">
         <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f3ff]">{hotel.name}</h2>
         <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
           <span className="font-medium text-slate-700 dark:text-[#f1eefc]">address : </span>
@@ -85,7 +111,7 @@ export default function BookingCard({ booking, hotel, onEdit, onDelete }: Bookin
         </p>
 
         {isEditing ? (
-          <div className="grid gap-3 md:grid-cols-2 ">
+          <div className="grid gap-3 md:grid-cols-2">
             <label className="flex flex-col gap-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
               <span className="font-medium text-slate-700 dark:text-[#f1eefc]">check-in :</span>
               <input
@@ -158,12 +184,22 @@ export default function BookingCard({ booking, hotel, onEdit, onDelete }: Bookin
             <button
               onClick={handleDelete}
               disabled={isLoading}
-              className="rounded-xl border border-slate-200 bg-white px-6 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:text-slate-400 dark:border-[#6f648f]  dark:bg-[#2c2649] dark:text-white dark:hover:bg-[#37305b] dark:disabled:border-[#4a4365] dark:disabled:bg-[#4a4365] dark:disabled:text-[#c3bdd7]"
+              className="rounded-xl border border-slate-200 bg-white px-6 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:text-slate-400 dark:border-[#6f648f] dark:bg-[#2c2649] dark:text-white dark:hover:bg-[#37305b] dark:disabled:border-[#4a4365] dark:disabled:bg-[#4a4365] dark:disabled:text-[#c3bdd7]"
             >
               Delete
             </button>
           </>
         )}
+      </div>
+
+      {/* Transport section spans full width */}
+      <div className="col-span-full">
+        <TransportationBookingSection
+          bookings={transportBookings}
+          onEdit={onEditTransport}
+          onDelete={onDeleteTransport}
+          onAdd={onAddTransport}
+        />
       </div>
     </div>
   );

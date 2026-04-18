@@ -3,26 +3,56 @@
 import TransportationBookingCard from "@/components/transport/TransportationBookingCard";
 import TransportLocationTooltip from "@/components/transport/TransportLocationTooltip";
 import { Transportation } from "@/interface/Transportation";
-import { TransportBookingInfo } from "@/interface/TransportationBooking";
+import { TransportationBooking } from "@/interface/TransportationBooking";
 import getTransportations from "@/lib/transportation/getTransportations";
 import capitalize from "@/util/capitalize";
 import { useSession } from "next-auth/react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface TransportationBookingSectionProps {
-  bookings: TransportBookingInfo[];
-  setBookings: Dispatch<SetStateAction<TransportBookingInfo[]>>
+  bookings: TransportationBooking[];
+  onEdit?: (
+    transportBookingId: string,
+    departureDateTime: string,
+    returnDateTime: string,
+    passengerNumber: number
+  ) => Promise<void>;
+  onDelete?: (transportBookingId: string) => Promise<void>;
+  onAdd?: (
+    transport: Transportation,
+    departure: string,
+    returnDT: string,
+    passengers: number
+  ) => Promise<void>;
 }
 
-export default function TransportationBookingSection({ bookings, setBookings }: TransportationBookingSectionProps) {
+export default function TransportationBookingSection({
+  bookings = [],
+  onEdit,
+  onDelete,
+  onAdd,
+}: TransportationBookingSectionProps) {
   const { data: session } = useSession();
   const [transports, setTransports] = useState<Transportation[]>([]);
   const [isExpanded, setExpanded] = useState(false);
 
+  // Inline edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDeparture, setEditDeparture] = useState("");
+  const [editReturn, setEditReturn] = useState("");
+  const [editPassengers, setEditPassengers] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Draft state for adding a NEW transport
+  const [addingTransport, setAddingTransport] = useState<Transportation | null>(null);
+  const [addDeparture, setAddDeparture] = useState("");
+  const [addReturn, setAddReturn] = useState("");
+  const [addPassengers, setAddPassengers] = useState(1);
+
   useEffect(() => {
     if (!session) return;
     const loadTransports = async () => {
-      const res = await getTransportations(session.user.token); // add filtering
+      const res = await getTransportations(session.user.token);
       if (!res.success) {
         console.error("Error fetching transportation:", res.message);
         return;
@@ -32,64 +62,338 @@ export default function TransportationBookingSection({ bookings, setBookings }: 
     loadTransports();
   }, [session]);
 
-  const handleBook = (transport: Transportation) => {
-    setBookings((state) => [...state, { transport, departure: "", passengerNumber: "" }]);
+  // --- Edit Existing Handlers ---
+  const handleStartEdit = (tb: TransportationBooking) => {
+    setEditingId(tb._id);
+    setEditDeparture(tb.departureDateTime?.slice(0, 16) ?? "");
+    setEditReturn(tb.returnDateTime?.slice(0, 16) ?? "");
+    setEditPassengers(tb.passengerNumber);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const handleSaveEdit = async (transportBookingId: string) => {
+    if (!editDeparture) {
+      alert("Please fill in departure date");
+      return;
+    }
+    if (editReturn && editDeparture >= editReturn) {
+      alert("Return date/time must be after departure");
+      return;
+    }
+    if (editPassengers < 1) {
+      alert("Passenger count must be at least 1");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await onEdit?.(transportBookingId, editDeparture, editReturn, editPassengers);
+      setEditingId(null);
+    } catch (error) {
+      console.error("Error updating transport booking:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (transportBookingId: string) => {
+    if (!confirm("Are you sure you want to remove this transport booking?")) return;
+    setIsLoading(true);
+    try {
+      await onDelete?.(transportBookingId);
+    } catch (error) {
+      console.error("Error deleting transport booking:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // --- Add New Handlers ---
+  const handleSelectTransportToAdd = (transport: Transportation) => {
+    setAddingTransport(transport);
+    setAddDeparture("");
+    setAddReturn("");
+    setAddPassengers(1);
+  };
+
+  const handleConfirmAdd = async () => {
+    if (!addingTransport) return;
+    if (!addDeparture) {
+      alert("Please fill in departure date");
+      return;
+    }
+    if (addReturn && addDeparture >= addReturn) {
+      alert("Return date/time must be after departure");
+      return;
+    }
+    if (addPassengers < 1) {
+      alert("Passenger count must be at least 1");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await onAdd?.(addingTransport, addDeparture, addReturn, addPassengers);
+      // Reset drafting state on success
+      setAddingTransport(null);
+      setExpanded(false);
+    } catch (error) {
+      console.error("Error adding transport booking:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="p-4 flex flex-col gap-2 rounded-2xl border border-gray-300 bg-secondary-gray dark:bg-dark-secondary-0 dark:border-none">
       <div>
         <div className="font-bold">Transportation Bookings</div>
-        {bookings.length} booking(s)
-        <ul className="my-2 px-2">
-          {bookings.map((transportBooking, i) => (
-            <li key={i} className="flex flex-col gap-2">
-              <div className="font-semibold">
-                {transportBooking.transport.name} by {transportBooking.transport.providerName} ({capitalize(transportBooking.transport.type)}): <TransportLocationTooltip location={transportBooking.transport.pickUpArea} /> to <TransportLocationTooltip location={transportBooking.transport.dropOffArea} />
-              </div>
-              <div className="flex gap-4 items-center ml-4">
-                <div>
-                  <input
-                    type="datetime-local"
-                    className="p-2 w-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary
-                    dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary dark:scheme-dark"
-                    value={transportBooking.departure}
-                    onChange={(e) => setBookings((state) => state.with(i, { ...transportBooking, departure: e.target.value }))}
-                    required
-                  />
+        <ul className="my-2 px-2 flex flex-col gap-3">
+          {bookings.length === 0 && (
+            <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
+              No transport bookings yet.
+            </p>
+          )}
+          {bookings.map((tb) => {
+            const isEditing = editingId === tb._id;
+            const t = tb.transportation;
+            return (
+              <li
+                key={tb._id}
+                className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 dark:border-[#3a3360] dark:bg-[#1e1933]"
+              >
+                {/* Transport info */}
+                <div className="font-semibold text-sm text-slate-800 dark:text-[#f5f3ff]">
+                  {t.name} by {t.providerName ?? ""} ({capitalize(t.type)})
+                  {t.pickUpArea && t.dropOffArea && (
+                    <>
+                      : <TransportLocationTooltip location={t.pickUpArea} /> to{" "}
+                      <TransportLocationTooltip location={t.dropOffArea} />
+                    </>
+                  )}
                 </div>
-                <div className="flex gap-2 items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                  <input
-                    type="number"
-                    className="p-2 w-18 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary
-                    dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary"
-                    value={transportBooking.passengerNumber}
-                    onChange={(e) => setBookings((state) => state.with(i, { ...transportBooking, passengerNumber: e.target.value }))}
-                    onBlur={(e) => setBookings((state) => state.with(i, { ...transportBooking, passengerNumber: String(Math.min(Math.max(Math.trunc(e.target.valueAsNumber) || 0, 1), 2000)) }))}
-                    min={1}
-                    required
-                  />
-                  {Math.min(Math.max(Math.trunc(Number(transportBooking.passengerNumber)), 0), 2000) * transportBooking.transport.price}฿
+
+                {/* Inline edit form */}
+                {isEditing ? (
+                  <div className="flex flex-wrap gap-3">
+                    <label className="flex flex-col gap-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
+                      <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
+                        Departure :
+                      </span>
+                      <input
+                        type="datetime-local"
+                        value={editDeparture}
+                        onChange={(e) => setEditDeparture(e.target.value)}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
+                      <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
+                        Return :
+                      </span>
+                      <input
+                        type="datetime-local"
+                        value={editReturn}
+                        onChange={(e) => setEditReturn(e.target.value)}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
+                      <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
+                        Passengers :
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={editPassengers}
+                        onChange={(e) => setEditPassengers(Number(e.target.value))}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0]"
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
+                    <span>
+                      <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
+                        Departure :{" "}
+                      </span>
+                      {tb.departureDateTime
+                        ? new Date(tb.departureDateTime).toLocaleString("en-TH")
+                        : "Not set"}
+                    </span>
+                    {tb.returnDateTime && (
+                      <span>
+                        <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
+                          Return :{" "}
+                        </span>
+                        {new Date(tb.returnDateTime).toLocaleString("en-TH")}
+                      </span>
+                    )}
+                    <span>
+                      <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
+                        Passengers :{" "}
+                      </span>
+                      {tb.passengerNumber}
+                    </span>
+                    <span>
+                      <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
+                        Price :{" "}
+                      </span>
+                      {(tb.passengerNumber * t.price).toLocaleString()}฿
+                    </span>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex justify-end gap-2">
+                  {isEditing ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveEdit(tb._id)}
+                        disabled={isLoading}
+                        className="rounded-xl bg-indigo-700 px-5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-300 dark:bg-[#6f648f] dark:hover:bg-[#7d72a0] dark:disabled:bg-[#4a4365]"
+                      >
+                        {isLoading ? "Saving..." : "Save"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        disabled={isLoading}
+                        className="rounded-xl border border-slate-200 bg-white px-5 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400 dark:border-[#6f648f] dark:bg-[#2c2649] dark:text-white dark:hover:bg-[#37305b]"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => handleStartEdit(tb)}
+                        className="rounded-xl bg-indigo-700 px-5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 dark:bg-[#6f648f] dark:hover:bg-[#7d72a0]"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(tb._id)}
+                        disabled={isLoading}
+                        className="rounded-xl border border-slate-200 bg-white px-5 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400 dark:border-[#6f648f] dark:bg-[#2c2649] dark:text-white dark:hover:bg-[#37305b]"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </div>
-                <div className="grow" />
-                <div onClick={() => confirm("Delete transportation booking?") && setBookings((state) => state.filter((_, idx) => idx !== i))}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="fill-none stroke-current hover:stroke-red-500 transition-colors" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       </div>
+
+      {/* ── Add new transport ── */}
       <div className="rounded-xl border border-gray-300 dark:bg-dark-secondary-1 dark:border-none">
-        <div className="p-4 pl-6 flex gap-4" onClick={() => setExpanded(!isExpanded)}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className={`fill-none stroke-current transition-transform ${isExpanded ? "rotate-90" : ""}`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        <div
+          className="p-4 pl-6 flex gap-4 cursor-pointer"
+          onClick={() => {
+            setExpanded(!isExpanded);
+            if (isExpanded) setAddingTransport(null);
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            className={`fill-none stroke-current transition-transform ${
+              isExpanded ? "rotate-90" : ""
+            }`}
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
           <div>Add new booking</div>
         </div>
 
-        {isExpanded && (
+        {/* Available Transport List */}
+        {isExpanded && !addingTransport && (
           <div className="flex gap-4 p-4 pt-0 overflow-x-auto">
-            {transports.map((transport) => <TransportationBookingCard key={transport._id} transport={transport} handleBook={handleBook} />)}
+            {transports.map((transport) => (
+              <TransportationBookingCard
+                key={transport._id}
+                transport={transport}
+                handleBook={handleSelectTransportToAdd}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Input Form for Selected Transport */}
+        {isExpanded && addingTransport && (
+          <div className="p-4 pt-0">
+            <div className="flex flex-col gap-3 rounded-xl border border-indigo-200 bg-indigo-50 p-4 dark:border-[#3a3360] dark:bg-[#201b36]">
+              <div className="font-semibold text-sm text-slate-800 dark:text-[#f5f3ff]">
+                New Booking: {addingTransport.name} by {addingTransport.providerName}
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <label className="flex flex-col gap-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
+                  <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
+                    Departure :
+                  </span>
+                  <input
+                    type="datetime-local"
+                    value={addDeparture}
+                    onChange={(e) => setAddDeparture(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
+                  <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
+                    Return (Optional) :
+                  </span>
+                  <input
+                    type="datetime-local"
+                    value={addReturn}
+                    onChange={(e) => setAddReturn(e.target.value)}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
+                  <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
+                    Passengers :
+                  </span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={addPassengers}
+                    onChange={(e) => setAddPassengers(Number(e.target.value))}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0]"
+                  />
+                </label>
+              </div>
+              <div className="flex justify-end gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={handleConfirmAdd}
+                  disabled={isLoading}
+                  className="rounded-xl bg-indigo-700 px-5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-slate-300 dark:bg-[#6f648f] dark:hover:bg-[#7d72a0] dark:disabled:bg-[#4a4365]"
+                >
+                  {isLoading ? "Adding..." : "Confirm Add"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAddingTransport(null)}
+                  disabled={isLoading}
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-1.5 text-xs font-semibold text-indigo-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:text-slate-400 dark:border-[#6f648f] dark:bg-[#2c2649] dark:text-white dark:hover:bg-[#37305b]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

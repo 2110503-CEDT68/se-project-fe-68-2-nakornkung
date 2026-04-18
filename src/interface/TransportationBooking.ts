@@ -4,8 +4,8 @@ import { User } from "@/interface/User";
 
 export interface TransportationBooking {
   _id: string;
-  user: User
-  booking: Booking;
+  user: User;
+  booking: Booking | string;   // can be populated or raw ID
   transportation: Transportation;
   departureDateTime: string;
   passengerNumber: number;

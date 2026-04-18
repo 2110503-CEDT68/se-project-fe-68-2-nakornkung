@@ -9,11 +9,11 @@ import { useSession } from "next-auth/react";
 import getHotel from "@/lib/hotels/getHotel";
 import { getNumberOfNights } from "@/util/getNumberOfNights";
 import TransportationBookingSection from "@/components/transport/TransportationBookingSection";
-import { TransportBookingInfo } from "@/interface/TransportationBooking";
+import { TransportationBooking } from "@/interface/TransportationBooking";
+import { Transportation } from "@/interface/Transportation";
 import createTransportationBooking from "@/lib/transportationBooking/createTransportation";
 
 export default function BookingPanel() {
-
     const { data: session } = useSession();
 
     const searchParams = useSearchParams();
@@ -23,7 +23,9 @@ export default function BookingPanel() {
     const [checkInDate, setCheckInDate] = useState<string>("");
     const [checkOutDate, setCheckOutDate] = useState<string>("");
     const [hotelImage, setHotelImage] = useState<string>("");
-    const [transportBookings, setTransportBookings] = useState<TransportBookingInfo[]>([]);
+    
+    // Use the unified TransportationBooking interface with temporary IDs for pending bookings
+    const [transportBookings, setTransportBookings] = useState<TransportationBooking[]>([]);
     
     const [errorMessage, setErrorMessage] = useState<string>("");
     const [loadingHotel, setLoadingHotel] = useState<boolean>(false);
@@ -45,14 +47,51 @@ export default function BookingPanel() {
                     setErrorMessage("Failed to load hotel information");
                 }
             } catch (error: unknown) {
-                        setErrorMessage(error instanceof Error ? error.message : "Error fetching hotel data");
-                    } finally {
-                        setLoadingHotel(false);
-                    }
+                setErrorMessage(error instanceof Error ? error.message : "Error fetching hotel data");
+            } finally {
+                setLoadingHotel(false);
+            }
         };
 
         fetchHotel();
     }, [hotelId]);
+
+    // Local handlers for pending transport bookings
+    const handleAddTransport = async (
+        transport: Transportation,
+        departure: string,
+        returnDT: string,
+        passengers: number
+    ) => {
+        const newBooking = {
+            _id: `temp-${Date.now()}`, // Temporary ID for the UI
+            booking: "", // No hotel booking ID yet
+            transportation: transport,
+            departureDateTime: departure,
+            returnDateTime: returnDT,
+            passengerNumber: passengers,
+        } as TransportationBooking;
+        setTransportBookings((prev) => [...prev, newBooking]);
+    };
+
+    const handleEditTransport = async (
+        transportBookingId: string,
+        departureDateTime: string,
+        returnDateTime: string,
+        passengerNumber: number
+    ) => {
+        setTransportBookings((prev) =>
+            prev.map((tb) =>
+                tb._id === transportBookingId
+                    ? { ...tb, departureDateTime, returnDateTime, passengerNumber }
+                    : tb
+            )
+        );
+    };
+
+    const handleDeleteTransport = async (transportBookingId: string) => {
+        setTransportBookings((prev) => prev.filter((tb) => tb._id !== transportBookingId));
+    };
 
     // Show Creating Complete and Redirect
     const router = useRouter();
@@ -89,9 +128,20 @@ export default function BookingPanel() {
 
             if (createResult.success) {
                 const bookingId = createResult.data._id;
-                const transportBookingResults = await Promise.all(transportBookings.map(async (transportBooking) => {
-                    return createTransportationBooking(bookingId, transportBooking, session.user.token);
-                }));
+                
+                // Map the UI state to the payload expected by your backend
+                const transportBookingResults = await Promise.all(
+                    transportBookings.map(async (tb) => {
+                        const payload = {
+                            transport: tb.transportation,
+                            departure: tb.departureDateTime,
+                            returnDT: tb.returnDateTime, // include if your API supports it
+                            passengerNumber: String(tb.passengerNumber),
+                        };
+                        return createTransportationBooking(bookingId, payload, session.user.token);
+                    })
+                );
+
                 const errors = transportBookingResults.filter((res) => !res.success).map((res) => res.message);
                 if (errors.length === 0) {
                     setSuccessMessage(`Booking ${hotelName} from ${checkInDate} to ${checkOutDate} (${numberOfNights} nights) with ${transportBookings.length} transport bookings success!`);
@@ -121,11 +171,9 @@ export default function BookingPanel() {
                         <label className="font-semibold text-text-3 mb-1 dark:text-text-4">Hotel</label>
                         <input
                             type="text"
-                            className="p-3 border border-gray-300 rounded-xl bg-secondary-gray focus:outline-none 
-                            dark:bg-dark-secondary-0 dark:border-none"
+                            className="p-3 border border-gray-300 rounded-xl bg-secondary-gray focus:outline-none dark:bg-dark-secondary-0 dark:border-none"
                             placeholder={hotelName ? "" : loadingHotel ? "Loading hotel..." : "No hotel selected"}
                             value={hotelName}
-                            onChange={(e) => setHotelName(e.target.value)}
                             readOnly
                         />
                     </div>
@@ -133,8 +181,7 @@ export default function BookingPanel() {
                         <label className="font-semibold text-text-3 mb-1 dark:text-text-4">Check-in Date</label>
                         <input
                             type="date"
-                            className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary
-                            dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary dark:scheme-dark"
+                            className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary dark:scheme-dark"
                             value={checkInDate}
                             onChange={(e) => setCheckInDate(e.target.value)}
                             required
@@ -144,8 +191,7 @@ export default function BookingPanel() {
                         <label className="font-semibold text-text-3 mb-1 dark:text-text-4">Check-out Date</label>
                         <input
                             type="date"
-                            className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary
-                            dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary dark:scheme-dark"
+                            className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary dark:bg-dark-secondary-1 dark:border-none dark:focus:bg-dark-primary dark:focus:ring-dark-primary dark:scheme-dark"
                             value={checkOutDate}
                             onChange={(e) => setCheckOutDate(e.target.value)}
                             required
@@ -161,12 +207,17 @@ export default function BookingPanel() {
                         src={hotelImage || "/banner.jpg"}
                         alt={`Image of ${hotelName || "hotel"}`}
                         fill
-                        objectFit="cover"
+                        className="object-cover"
                     />
                 </div>
             </div>
 
-            <TransportationBookingSection bookings={transportBookings} setBookings={setTransportBookings} />
+            <TransportationBookingSection 
+                bookings={transportBookings} 
+                onAdd={handleAddTransport}
+                onEdit={handleEditTransport}
+                onDelete={handleDeleteTransport}
+            />
 
             {errorMessage && (
                 <div className="text-center">
@@ -193,5 +244,5 @@ export default function BookingPanel() {
                 </button>
             </div>
         </form>
-    )
+    );
 }
