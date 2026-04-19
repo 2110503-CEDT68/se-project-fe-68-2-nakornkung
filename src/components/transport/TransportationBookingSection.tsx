@@ -22,6 +22,7 @@ interface TransportationBookingSectionProps {
     departure: string,
     passengers: number
   ) => Promise<void>;
+  setPending: (pending: boolean) => void;
 }
 
 export default function TransportationBookingSection({
@@ -29,6 +30,7 @@ export default function TransportationBookingSection({
   onEdit,
   onDelete,
   onAdd,
+  setPending,
 }: TransportationBookingSectionProps) {
   const { data: session } = useSession();
   const [transports, setTransports] = useState<Transportation[]>([]);
@@ -44,6 +46,10 @@ export default function TransportationBookingSection({
   const [addingTransport, setAddingTransport] = useState<Transportation | null>(null);
   const [addDeparture, setAddDeparture] = useState("");
   const [addPassengers, setAddPassengers] = useState(1);
+
+  useEffect(() => {
+    setPending(addingTransport !== null || editingId !== null);
+  }, [addingTransport, editingId, setPending]);
 
   useEffect(() => {
     if (!session) return;

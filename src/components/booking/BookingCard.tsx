@@ -46,6 +46,7 @@ export default function BookingCard({
   const [isEditing, setIsEditing] = useState(false);
   const [checkInDate, setCheckInDate] = useState(booking.checkInDate.split("T")[0]);
   const [checkOutDate, setCheckOutDate] = useState(booking.checkOutDate.split("T")[0]);
+  const [isTransportationPending, setTransportationPending] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -102,6 +103,10 @@ export default function BookingCard({
     }
     if (numberOfNights > 3) {
       setErrorMessage("Cannot book more than 3 nights");
+      return;
+    }
+    if (isTransportationPending) {
+      setErrorMessage("Please complete or cancel transportation booking");
       return;
     }
     setIsLoading(true);
@@ -215,6 +220,7 @@ export default function BookingCard({
           onAdd={handleAddTransport}
           onEdit={handleEditTransport}
           onDelete={handleDeleteTransport}
+          setPending={setTransportationPending}
         />
       ) : (
         transportBookings.length > 0 && (

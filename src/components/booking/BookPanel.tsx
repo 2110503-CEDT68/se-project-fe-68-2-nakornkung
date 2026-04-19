@@ -26,6 +26,7 @@ export default function BookingPanel() {
     
     // Use the unified TransportationBooking interface with temporary IDs for pending bookings
     const [transportBookings, setTransportBookings] = useState<TransportationBooking[]>([]);
+    const [isTransportationPending, setTransportationPending] = useState(false);
     
     const [errorMessage, setErrorMessage] = useState<string>("");
     const [loadingHotel, setLoadingHotel] = useState<boolean>(false);
@@ -104,7 +105,7 @@ export default function BookingPanel() {
     };
 
     const areAllTransportBookingsValid = (bookings: TransportationBooking[]) => {
-        return bookings.every(isValidTransportBooking);
+        return !isTransportationPending && bookings.every(isValidTransportBooking);
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -176,8 +177,6 @@ export default function BookingPanel() {
         }
     };
 
-    const canSubmit = !!session?.user && numberOfNights > 0 && numberOfNights <= 3 && areAllTransportBookingsValid(transportBookings);
-
     return (
         <form
             onSubmit={handleSubmit}
@@ -235,6 +234,7 @@ export default function BookingPanel() {
                 onAdd={handleAddTransport}
                 onEdit={handleEditTransport}
                 onDelete={handleDeleteTransport}
+                setPending={setTransportationPending}
             />
 
             {errorMessage && (
@@ -256,7 +256,6 @@ export default function BookingPanel() {
             <div className="flex justify-center">
                 <button
                     type="submit"
-                    disabled={!canSubmit}
                     className="px-8 py-2 bg-primary text-white font-semibold rounded-xl hover:bg-accent focus:outline-none transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-primary dark:hover:bg-dark-secondary-0 dark:hover:shadow-[0_2px_10px_rgba(255,255,255,0.1)]"
                 >
                     Book
