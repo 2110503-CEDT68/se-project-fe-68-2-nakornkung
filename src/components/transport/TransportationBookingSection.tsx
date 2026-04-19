@@ -157,7 +157,8 @@ export default function TransportationBookingSection({
               >
                 {/* Transport info */}
                 <div className="font-semibold text-sm text-slate-800 dark:text-[#f5f3ff]">
-                  {t.name} by {t.providerName ?? ""} ({capitalize(t.type)})
+                  <div>{t.name}</div>
+                  <div> by {t.providerName ?? ""} ({capitalize(t.type)})</div>
                   {t.pickUpArea && t.dropOffArea && (
                     <>
                       : <TransportLocationTooltip location={t.pickUpArea} /> to{" "}

@@ -10,8 +10,8 @@ interface TransportationBookingCardProps {
 
 export default function TransportationBookingCard({ transport, handleBook }: TransportationBookingCardProps) {
   return (
-    <div className="p-2 flex flex-col items-center gap-2 rounded-md border border-gray-300 bg-secondary dark:bg-dark-secondary dark:border-none">
-      <div className="relative rounded-sm w-40 aspect-square overflow-clip">
+    <div className="p-2 flex flex-col items-left gap-2 rounded-md border border-gray-400 bg-secondary dark:bg-dark-secondary dark:border-none">
+      <div className="relative rounded-sm w-64 aspect-square overflow-clip">
         <Image
           src={transport.img}
           alt={`Image of transport ${transport.name}`}
@@ -19,9 +19,11 @@ export default function TransportationBookingCard({ transport, handleBook }: Tra
           fill
         />
       </div>
-      <div className="p-2 flex flex-col items-center">
+      <div className="p-2 flex flex-col flex-1 items-left">
         <div>
-          {transport.name} by {transport.providerName}
+          {transport.name}
+        </div>
+        <div> by {transport.providerName}
         </div>
         <div>
           {capitalize(transport.type)}, {transport.price}฿
@@ -30,11 +32,14 @@ export default function TransportationBookingCard({ transport, handleBook }: Tra
           {transport.description}
         </div>
         <div>
-          <TransportLocationTooltip location={transport.pickUpArea} /> to <TransportLocationTooltip location={transport.dropOffArea} />
+          From :<TransportLocationTooltip location={transport.pickUpArea} />
+        </div>
+        <div>
+          To :<TransportLocationTooltip location={transport.dropOffArea} />
         </div>
         <button
           type="button"
-          className="px-4 py-1 mt-1 bg-primary text-white font-semibold rounded-full hover:bg-accent focus:outline-none transition duration-200 dark:bg-dark-primary dark:hover:bg-dark-secondary-0 dark:hover:shadow-[0_2px_10px_rgba(255,255,255,0.1)]"
+          className="px-4 py-1 mt-auto items-center  bg-primary text-white font-semibold rounded-full hover:bg-accent focus:outline-none transition duration-200 dark:bg-dark-primary dark:hover:bg-dark-secondary-0 dark:hover:shadow-[0_2px_10px_rgba(255,255,255,0.1)]"
           onClick={() => handleBook(transport)}
         >
           Book
