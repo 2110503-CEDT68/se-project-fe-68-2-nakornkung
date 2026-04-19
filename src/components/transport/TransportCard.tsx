@@ -1,84 +1,92 @@
 "use client";
 import Image from "next/image";
-import { Transportation } from "@/interface/Transportation";
+import { Transportation, TransportationType } from "@/interface/Transportation";
 import capitalize from "@/util/capitalize";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import provinces from "@/data/provinces";
 
 interface TransportCardProps {
   transport: Transportation;
-  onDelete: (id: string,) => void;
-  onEdit: (id:string,data:any) => void;
+  onDelete: (id: string) => void;
+  onEdit: (id: string, data: Partial<Transportation>) => void | Promise<void>;
 }
 
-export default function TransportCard({ transport, onDelete,onEdit }: TransportCardProps) {
+const transportationTypes: TransportationType[] = ["car", "airplane", "boat", "bus", "van", "shuttle"];
+
+const buildInitialFormData = (transport: Transportation) => ({
+  name: transport.name,
+  providerName: transport.providerName,
+  type: transport.type,
+  description: transport.description || "",
+  pickUpArea: {
+    name: transport.pickUpArea?.name || "",
+    address: {
+      street: transport.pickUpArea?.address?.street || "",
+      district: transport.pickUpArea?.address?.district || "",
+      province: transport.pickUpArea?.address?.province || "",
+      postalCode: transport.pickUpArea?.address?.postalCode || "",
+    },
+  },
+  dropOffArea: {
+    name: transport.dropOffArea?.name || "",
+    address: {
+      street: transport.dropOffArea?.address?.street || "",
+      district: transport.dropOffArea?.address?.district || "",
+      province: transport.dropOffArea?.address?.province || "",
+      postalCode: transport.dropOffArea?.address?.postalCode || "",
+    },
+  },
+  price: transport.price,
+  img: transport.img,
+});
+
+export default function TransportCard({ transport, onDelete, onEdit }: TransportCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    name: transport.name,
-    providerName: transport.providerName,
-    type: transport.type,
-    description :transport.description,
-    pickUpArea: {
-      name: transport.pickUpArea?.name || "",
-      address: {
-        street: transport.pickUpArea?.address?.street || "",
-        district: transport.pickUpArea?.address?.district || "",
-        province: transport.pickUpArea?.address?.province || "",
-        postalCode: transport.pickUpArea?.address?.postalCode || ""
-      }
-    },
-    dropOffArea: {
-      name: transport.dropOffArea?.name || "",
-      address: {
-        street: transport.dropOffArea?.address?.street || "",
-        district: transport.dropOffArea?.address?.district || "",
-        province: transport.dropOffArea?.address?.province || "",
-        postalCode: transport.dropOffArea?.address?.postalCode || ""
-      }
-    },
-    price: transport.price,
-    img: transport.img,
-    createAt:transport.createAt
-  });
+  const [formData, setFormData] = useState(buildInitialFormData(transport));
+
+  useEffect(() => {
+    if (!isEditing) {
+      setFormData(buildInitialFormData(transport));
+    }
+  }, [transport, isEditing]);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this transportation?")) return;
     onDelete(transport._id);
   };
+
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      await onEdit(transport._id,formData);
+      await onEdit(transport._id, { ...formData, price: Number(formData.price) });
       setIsEditing(false);
     } catch (error) {
-      console.error("Error updating booking:", error);
+      console.error("Error updating transportation:", error);
       handleCancel();
     } finally {
       setIsLoading(false);
     }
   };
+
   const handleCancel = () => {
-    setFormData({
-      name: transport.name,
-      providerName: transport.providerName,
-      description :transport.description,
-      price: transport.price,
-      type: transport.type,
-      pickUpArea: transport.pickUpArea,
-      dropOffArea: transport.dropOffArea,
-      img: transport.img,
-      createAt:transport.createAt
-    });
+    setFormData(buildInitialFormData(transport));
     setIsEditing(false);
   };
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === "price" ? Number(value) : value,
+    }));
   };
+
   const handleLocationChange = (
-    type: 'pickUpArea' | 'dropOffArea',
+    type: "pickUpArea" | "dropOffArea",
     field: string,
     value: string,
-    isAddress: boolean = false
+    isAddress: boolean = false,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -90,10 +98,10 @@ export default function TransportCard({ transport, onDelete,onEdit }: TransportC
       },
     }));
   };
-  
+
   return (
     <div className="grid gap-10 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-[#30294d] dark:bg-[#25203e] dark:shadow-none md:grid-cols-[170px_minmax(0,1fr)_auto] md:items-center">
-      <div className="w-50 h-30 relative overflow-hidden rounded-xl bg-slate-100 dark:bg-[#312b50]">
+      <div className="relative h-30 w-50 overflow-hidden rounded-xl bg-slate-100 dark:bg-[#312b50]">
         <Image
           src={transport.img}
           alt={transport.name}
@@ -103,172 +111,149 @@ export default function TransportCard({ transport, onDelete,onEdit }: TransportC
         />
       </div>
 
-      <div className="min-w-0 space-y-1 ml-15 ">
+      <div className="min-w-0 space-y-3 ml-15">
         {isEditing ? (
-          <>
-            {/* --- โหมดแก้ไข (แสดง Input) --- */}
-            <div className="flex gap-2">
-              <label className="font-medium text-slate-700 dark:text-[#f1eefc]">Name: </label>
-              <input
-                name="name"
-                value={formData.name} 
-                onChange={handleChange}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
-              />
-              <label className="font-medium text-slate-700 dark:text-[#f1eefc]">ProviderName: </label>
-              <input
-                name="providerName"
-                value={formData.providerName} 
-                onChange={handleChange}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
-              />
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="font-medium text-slate-700 dark:text-[#f1eefc]">Description : </label>
-                <input 
-                  name="description"
-                  type="text"
-                  value={formData.description||""}
+          <div className="grid gap-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="flex flex-col gap-1">
+                <label className="font-medium text-slate-700 dark:text-[#f1eefc]">Name</label>
+                <input
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
                 />
-                <label className="font-medium text-slate-700 dark:text-[#f1eefc]">  Type : </label>
-                <select 
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="font-medium text-slate-700 dark:text-[#f1eefc]">Provider name</label>
+                <input
+                  name="providerName"
+                  value={formData.providerName}
+                  onChange={handleChange}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-[2fr_1fr_1fr]">
+              <div className="flex flex-col gap-1">
+                <label className="font-medium text-slate-700 dark:text-[#f1eefc]">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="font-medium text-slate-700 dark:text-[#f1eefc]">Type</label>
+                <select
                   name="type"
                   value={formData.type}
                   onChange={handleChange}
                   className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
                 >
-                  <option value="car">Car</option>
-                  <option value="van">Van</option>
-                  <option value="bus">Bus</option>
+                  {transportationTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {capitalize(type)}
+                    </option>
+                  ))}
                 </select>
               </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="font-medium text-slate-700 dark:text-[#f1eefc]">Price (฿) : </label>
-                <input 
+              <div className="flex flex-col gap-1">
+                <label className="font-medium text-slate-700 dark:text-[#f1eefc]">Price (฿)</label>
+                <input
                   name="price"
                   type="number"
-                  value={formData.price} 
+                  min={0}
+                  value={formData.price}
                   onChange={handleChange}
                   className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
                 />
               </div>
             </div>
-            <div className="flex gap-4">
-              <label  className="font-medium text-slate-700 dark:text-[#f1eefc]">Pick Up Details</label>
-              
-              <div className="grid grid-cols-1 gap-2">
-                <div className="font-medium text-slate-700 dark:text-[#f1eefc]">Location Name : 
-                <input 
-                  placeholder="Location Name" 
-                  value={formData.pickUpArea.name} 
-                  onChange={(e) => handleLocationChange('pickUpArea', 'name', e.target.value)} 
-                  className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-[#4a4365] dark:bg-[#312b50] dark:text-white" />
-                </div>
-                <div className="font-medium text-slate-700 dark:text-[#f1eefc]">Street : 
-                <input 
-                  placeholder="Street" 
-                  value={formData.pickUpArea.address.street} 
-                  onChange={(e) => handleLocationChange('pickUpArea', 'street', e.target.value, true)} 
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark" />
-                </div>
-                <div className="font-medium text-slate-700 dark:text-[#f1eefc]">District : 
-                <input 
-                  placeholder="District" 
-                  value={formData.pickUpArea.address.district} 
-                  onChange={(e) => handleLocationChange('pickUpArea', 'district', e.target.value, true)} 
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark" />
-                </div>
-                <div className="font-medium text-slate-700 dark:text-[#f1eefc]">Province : 
-                <input 
-                  placeholder="Province" 
-                  value={formData.pickUpArea.address.province} 
-                  onChange={(e) => handleLocationChange('pickUpArea', 'province', e.target.value, true)} 
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark" />
-                </div>
-                <div className="font-medium text-slate-700 dark:text-[#f1eefc]">Postal Code : 
-                <input 
-                  placeholder="Postal Code" 
-                  value={formData.pickUpArea.address.postalCode} 
-                  onChange={(e) => handleLocationChange('pickUpArea', 'postalCode', e.target.value, true)} 
-                  className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark" />
-                </div>
-              </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              {([
+                ["pickUpArea", "Pick-up details"],
+                ["dropOffArea", "Drop-off details"],
+              ] as const).map(([areaKey, title]) => {
+                const area = formData[areaKey];
+
+                return (
+                  <div key={areaKey} className="grid gap-2 rounded-2xl border border-slate-200 p-4 dark:border-[#433b68]">
+                    <div className="font-semibold text-slate-700 dark:text-[#f1eefc]">{title}</div>
+                    <input
+                      placeholder="Location name"
+                      value={area.name}
+                      onChange={(e) => handleLocationChange(areaKey, "name", e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff]"
+                    />
+                    <input
+                      placeholder="Street"
+                      value={area.address.street}
+                      onChange={(e) => handleLocationChange(areaKey, "street", e.target.value, true)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff]"
+                    />
+                    <input
+                      placeholder="District"
+                      value={area.address.district}
+                      onChange={(e) => handleLocationChange(areaKey, "district", e.target.value, true)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff]"
+                    />
+                    <select
+                      value={area.address.province}
+                      onChange={(e) => handleLocationChange(areaKey, "province", e.target.value, true)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff]"
+                    >
+                      <option value="" disabled>Select province</option>
+                      {provinces.map((province) => (
+                        <option key={`${areaKey}-${province}`} value={province}>
+                          {province}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      placeholder="Postal code"
+                      value={area.address.postalCode}
+                      onChange={(e) => handleLocationChange(areaKey, "postalCode", e.target.value, true)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff]"
+                    />
+                  </div>
+                );
+              })}
             </div>
-            <div className="flex gap-4">
-              <label  className="font-medium text-slate-700 dark:text-[#f1eefc]">Drop Off Details</label>
-              <div className="grid grid-cols-1 gap-2">
-                <div className="font-medium text-slate-700 dark:text-[#f1eefc]">Location Name : 
-                <input 
-                placeholder="Location Name" 
-                value={formData.dropOffArea.name} 
-                onChange={(e) => handleLocationChange('dropOffArea', 'name', e.target.value)} 
-                className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-[#4a4365] dark:bg-[#312b50] dark:text-white" />
-                </div>
-                <div className="font-medium text-slate-700 dark:text-[#f1eefc]">Street : 
-                <input 
-                placeholder="Street" 
-                value={formData.dropOffArea.address.street} 
-                onChange={(e) => handleLocationChange('dropOffArea', 'street', e.target.value, true)} 
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark" />
-                </div>
-                <div className="font-medium text-slate-700 dark:text-[#f1eefc]">District : 
-                <input 
-                placeholder="District" 
-                value={formData.dropOffArea.address.district} 
-                onChange={(e) => handleLocationChange('dropOffArea', 'district', e.target.value, true)} 
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark" />
-                </div>
-                <div className="font-medium text-slate-700 dark:text-[#f1eefc]">Province : 
-                <input 
-                placeholder="Province" 
-                value={formData.dropOffArea.address.province} 
-                onChange={(e) => handleLocationChange('dropOffArea', 'province', e.target.value, true)} 
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark" />
-                </div>
-                <div className="font-medium text-slate-700 dark:text-[#f1eefc]">Postal Code : 
-                <input 
-                placeholder="Postal Code" 
-                value={formData.dropOffArea.address.postalCode} 
-                onChange={(e) => handleLocationChange('dropOffArea', 'postalCode', e.target.value, true)} 
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark" />
-                </div>
-              </div>
-            </div>
-          </>
+          </div>
         ) : (
           <>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f3ff]">{transport.name} by {transport.providerName}</h2>
-          <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
-            {transport.description}
-          </p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-[#f5f3ff]">
+              {transport.name} by {transport.providerName}
+            </h2>
+            <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">{transport.description}</p>
 
-          <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
-            <span className="font-medium text-slate-700 dark:text-[#f1eefc]">type : </span>
-            {capitalize(transport.type)}
-          </p>
+            <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
+              <span className="font-medium text-slate-700 dark:text-[#f1eefc]">type : </span>
+              {capitalize(transport.type)}
+            </p>
 
-          <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
-            <span className="font-medium text-slate-700 dark:text-[#f1eefc]">price : </span>
-            {transport.price}฿
-          </p>
+            <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
+              <span className="font-medium text-slate-700 dark:text-[#f1eefc]">price : </span>
+              {transport.price}฿
+            </p>
 
-          <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
-            <span className="font-medium text-slate-700 dark:text-[#f1eefc]">pick up : </span>
-            {transport.pickUpArea.name} ({transport.pickUpArea.address.street}, {transport.pickUpArea.address.district}, {transport.pickUpArea.address.province} {transport.pickUpArea.address.postalCode})
-          </p>
+            <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
+              <span className="font-medium text-slate-700 dark:text-[#f1eefc]">pick up : </span>
+              {transport.pickUpArea.name} ({transport.pickUpArea.address.street}, {transport.pickUpArea.address.district}, {transport.pickUpArea.address.province} {transport.pickUpArea.address.postalCode})
+            </p>
 
-          <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
-            <span className="font-medium text-slate-700 dark:text-[#f1eefc]">drop off : </span>
-            {transport.dropOffArea.name} ({transport.dropOffArea.address.street}, {transport.dropOffArea.address.district}, {transport.dropOffArea.address.province} {transport.dropOffArea.address.postalCode})
-          </p>
+            <p className="text-sm text-slate-500 dark:text-[#c7c2dc]">
+              <span className="font-medium text-slate-700 dark:text-[#f1eefc]">drop off : </span>
+              {transport.dropOffArea.name} ({transport.dropOffArea.address.street}, {transport.dropOffArea.address.district}, {transport.dropOffArea.address.province} {transport.dropOffArea.address.postalCode})
+            </p>
           </>
         )}
       </div>
+
       <div className="flex items-end justify-end gap-3 self-end">
         {isEditing ? (
           <>
