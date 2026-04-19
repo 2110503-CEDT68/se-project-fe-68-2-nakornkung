@@ -1,15 +1,30 @@
 "use client";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import createTransportation from "@/lib/transportation/createTransportation";
 import Loading from "@/components/Loading";
 import { Transportation, TransportationType } from "@/interface/Transportation";
 import capitalize from "@/util/capitalize";
+import provinces from "@/data/provinces";
 
 const transportationTypes: TransportationType[] = ["car", "airplane", "boat", "bus", "van", "shuttle"];
 
+const getFriendlyErrorMessage = (message?: string) => {
+    if (!message) return "Something went wrong while creating the transportation.";
+
+    const normalizedMessage = message.toLowerCase();
+
+    if (normalizedMessage.includes("duplicate") || normalizedMessage.includes("already exists") || normalizedMessage.includes("e11000")) {
+        return "A transportation with this name already exists. Please choose a different name.";
+    }
+
+    return message;
+};
+
 export default function CreateTransportPanel() {
     const { data: session } = useSession();
+    const router = useRouter();
 
     const [isLoading, setLoading] = useState(false);
 
@@ -44,14 +59,14 @@ export default function CreateTransportPanel() {
             img: transportForm.get("img") as string,
         };
 
-        console.log(transportation)
-
         const res = await createTransportation(transportation, session.user.token);
 
         if (res.success) {
-            alert("Create Transportation Successfully!");
+            alert("Transportation created successfully!");
+            router.push("/admin/transport");
+            router.refresh();
         } else {
-            alert(`Error: ${res.message}`);
+            alert(getFriendlyErrorMessage(res.message));
         }
         setLoading(false);
     };
@@ -67,6 +82,17 @@ export default function CreateTransportPanel() {
             action={handleSubmit}
             className="grid grid-cols-2 gap-4 w-full p-6 border border-slate-300 rounded-3xl bg-white shadow-md dark:bg-dark-secondary dark:border-none"
         >
+            <div className="col-span-2 flex justify-between items-center gap-4">
+                <div className="text-lg font-semibold text-slate-800 dark:text-secondary-gray">New transportation details</div>
+                <button
+                    type="button"
+                    onClick={() => router.back()}
+                    className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 transition dark:border-dark-secondary-1 dark:text-secondary-gray dark:hover:bg-dark-secondary-0"
+                >
+                    Back
+                </button>
+            </div>
+
             <div className="flex flex-col">
                 <label className="font-semibold text-gray-700 mb-1 dark:text-secondary-gray">Transportation Name</label>
                 <input
@@ -99,12 +125,14 @@ export default function CreateTransportPanel() {
                 <label className="font-semibold text-gray-700 mb-1 dark:text-secondary-gray">Type</label>
                 <select
                     name="type"
+                    defaultValue=""
                     className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     required
                 >
-                    <option label="Transportation type" disabled />
-        
-                    {transportationTypes.map((type) => (<option key={type} value={type}>{capitalize(type)}</option>))}
+                    <option value="" disabled>Transportation type</option>
+                    {transportationTypes.map((type) => (
+                        <option key={type} value={type}>{capitalize(type)}</option>
+                    ))}
                 </select>
             </div>
 
@@ -113,8 +141,7 @@ export default function CreateTransportPanel() {
                 <input
                     type="number"
                     name="price"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500
-                    dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     placeholder="Enter price"
                     min={0}
                     required
@@ -126,8 +153,7 @@ export default function CreateTransportPanel() {
                 <input
                     type="url"
                     name="img"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500
-                    dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     placeholder="https://example.com/image.jpg"
                     required
                 />
@@ -140,8 +166,7 @@ export default function CreateTransportPanel() {
                 <input
                     type="text"
                     name="pickUpName"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none 
-                    dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     placeholder="Enter pick-up location"
                     required
                 />
@@ -151,8 +176,7 @@ export default function CreateTransportPanel() {
                 <input
                     type="text"
                     name="pickUpAddress"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none 
-                    dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     placeholder="Enter pick-up address"
                     required
                 />
@@ -162,30 +186,31 @@ export default function CreateTransportPanel() {
                 <input
                     type="text"
                     name="pickUpDistrict"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500
-                    dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     placeholder="Enter pick-up district"
                     required
                 />
             </div>
             <div className="flex flex-col">
                 <label className="font-semibold text-gray-700 mb-1 dark:text-secondary-gray">Province</label>
-                <input
-                    type="text"
+                <select
                     name="pickUpProvince"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500
-                    dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
-                    placeholder="Enter pick-up province"
+                    defaultValue=""
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     required
-                />
+                >
+                    <option value="" disabled>Select pick-up province</option>
+                    {provinces.map((province) => (
+                        <option key={`pickup-${province}`} value={province}>{province}</option>
+                    ))}
+                </select>
             </div>
             <div className="flex flex-col">
                 <label className="font-semibold text-gray-700 mb-1 dark:text-secondary-gray">Postal Code</label>
                 <input
                     type="text"
                     name="pickUpPostalCode"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500
-                    dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     placeholder="Enter pick-up postal code"
                     required
                 />
@@ -198,8 +223,7 @@ export default function CreateTransportPanel() {
                 <input
                     type="text"
                     name="dropOffName"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none 
-                    dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     placeholder="Enter drop-off location"
                     required
                 />
@@ -209,8 +233,7 @@ export default function CreateTransportPanel() {
                 <input
                     type="text"
                     name="dropOffAddress"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none 
-                    dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     placeholder="Enter drop-off address"
                     required
                 />
@@ -220,38 +243,36 @@ export default function CreateTransportPanel() {
                 <input
                     type="text"
                     name="dropOffDistrict"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500
-                    dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     placeholder="Enter drop-off district"
                     required
                 />
             </div>
             <div className="flex flex-col">
                 <label className="font-semibold text-gray-700 mb-1 dark:text-secondary-gray">Province</label>
-                <input
-                    type="text"
+                <select
                     name="dropOffProvince"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500
-                    dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
-                    placeholder="Enter drop-off province"
+                    defaultValue=""
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     required
-                />
+                >
+                    <option value="" disabled>Select drop-off province</option>
+                    {provinces.map((province) => (
+                        <option key={`dropoff-${province}`} value={province}>{province}</option>
+                    ))}
+                </select>
             </div>
             <div className="flex flex-col">
                 <label className="font-semibold text-gray-700 mb-1 dark:text-secondary-gray">Postal Code</label>
                 <input
                     type="text"
                     name="dropOffPostalCode"
-                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500
-                    dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
+                    className="p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-none dark:bg-dark-secondary-0 dark:hover:bg-dark-secondary-1"
                     placeholder="Enter drop-off postal code"
                     required
                 />
             </div>
 
-            <div>
-                
-            </div>
             <div className="col-span-2 flex justify-center mt-4 gap-4">
                 <button
                     type="submit"
@@ -264,6 +285,5 @@ export default function CreateTransportPanel() {
                 </button>
             </div>
         </form>
-
-    )
-}
+    );
+}   

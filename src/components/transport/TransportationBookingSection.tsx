@@ -37,7 +37,6 @@ export default function TransportationBookingSection({
   // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDeparture, setEditDeparture] = useState("");
-  const [editReturn, setEditReturn] = useState("");
   const [editPassengers, setEditPassengers] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -73,10 +72,6 @@ export default function TransportationBookingSection({
   const handleSaveEdit = async (transportBookingId: string) => {
     if (!editDeparture) {
       alert("Please fill in departure date");
-      return;
-    }
-    if (editReturn && editDeparture >= editReturn) {
-      alert("Return date/time must be after departure");
       return;
     }
     if (editPassengers < 1) {
@@ -178,17 +173,6 @@ export default function TransportationBookingSection({
                         type="datetime-local"
                         value={editDeparture}
                         onChange={(e) => setEditDeparture(e.target.value)}
-                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
-                      />
-                    </label>
-                    <label className="flex flex-col gap-1 text-sm text-slate-500 dark:text-[#c7c2dc]">
-                      <span className="font-medium text-slate-700 dark:text-[#f1eefc]">
-                        Return :
-                      </span>
-                      <input
-                        type="datetime-local"
-                        value={editReturn}
-                        onChange={(e) => setEditReturn(e.target.value)}
                         className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-indigo-500 dark:border-[#433b68] dark:bg-[#1f1a35] dark:text-[#f5f3ff] dark:focus:border-[#8c7fd0] dark:scheme-dark"
                       />
                     </label>
