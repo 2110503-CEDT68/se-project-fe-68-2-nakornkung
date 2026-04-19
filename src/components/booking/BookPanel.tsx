@@ -94,6 +94,19 @@ export default function BookingPanel() {
     const router = useRouter();
     const [successMessage, setSuccessMessage] = useState<string>("");
 
+    const isValidTransportBooking = (tb: TransportationBooking) => {
+    return (
+        !!tb.transportation &&
+        tb.departureDateTime?.trim() !== "" &&
+        Number.isFinite(Number(tb.passengerNumber)) &&
+        Number(tb.passengerNumber) > 0
+        );
+    };
+
+    const areAllTransportBookingsValid = (bookings: TransportationBooking[]) => {
+        return bookings.every(isValidTransportBooking);
+    };
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setErrorMessage("");
@@ -104,6 +117,11 @@ export default function BookingPanel() {
             return;
         }
 
+        if (!areAllTransportBookingsValid(transportBookings)) {
+            setErrorMessage("Please complete all transportation booking fields before submitting.");
+            return;
+        }
+
         if (numberOfNights <= 0) {
             setErrorMessage("Check-Out date cannot be less than or equal to Check-In date");
             return;
@@ -111,6 +129,7 @@ export default function BookingPanel() {
             setErrorMessage("Can not book more than 3 nights");
             return;
         }
+        
 
         const booking: SummaryBooking = {
             hotelId: hotelId,
@@ -156,6 +175,8 @@ export default function BookingPanel() {
             setErrorMessage(msg);
         }
     };
+
+    const canSubmit = !!session?.user && numberOfNights > 0 && numberOfNights <= 3 && areAllTransportBookingsValid(transportBookings);
 
     return (
         <form
@@ -235,7 +256,8 @@ export default function BookingPanel() {
             <div className="flex justify-center">
                 <button
                     type="submit"
-                    className="px-8 py-2 bg-primary text-white font-semibold rounded-xl hover:bg-accent focus:outline-none transition duration-200 dark:bg-dark-primary dark:hover:bg-dark-secondary-0 dark:hover:shadow-[0_2px_10px_rgba(255,255,255,0.1)]"
+                    disabled={!canSubmit}
+                    className="px-8 py-2 bg-primary text-white font-semibold rounded-xl hover:bg-accent focus:outline-none transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-primary dark:hover:bg-dark-secondary-0 dark:hover:shadow-[0_2px_10px_rgba(255,255,255,0.1)]"
                 >
                     Book
                 </button>
