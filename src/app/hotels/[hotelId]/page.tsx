@@ -8,6 +8,8 @@ import Hotel from "@/interface/Hotel";
 import getHotel from "@/lib/hotels/getHotel";
 import Loading from "@/components/Loading";
 import NearbyAttractionsViwe from "@/components/hotels/NearbyAttractionsViwe";
+import {useSession } from "next-auth/react";
+
 export default function HotelPage() {
   const { hotelId } = useParams<{ hotelId: string }>();
   const [hotel, setHotel] = useState<Hotel | null>(null);
