@@ -5,17 +5,19 @@ import { BACKEND_URL } from "@/lib/consts";
 interface LoadTransportationProps {
   name?: string;
   providerName?: string;
+  search?: string;
   type?: TransportationType | "";
   province?: string;
   page?: number;
   limit?: number;
 }
 
-export default async function getTransportations(token: string, { name, providerName, type, province, page, limit }: LoadTransportationProps = {}): Promise<PaginatedApiResponse<Transportation[]>> {
+export default async function getTransportations(token: string, { name, providerName, search, type, province, page, limit }: LoadTransportationProps = {}): Promise<PaginatedApiResponse<Transportation[]>> {
   try {
     const query = new URLSearchParams();
     if (name) query.set("name", name);
     if (providerName) query.set("providerName", providerName);
+    if (search) query.set("search", search);
     if (type) query.set("type", type);
     if (province) query.set("province", province);
     if (page) query.set("page", page.toString());

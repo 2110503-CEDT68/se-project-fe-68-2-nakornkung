@@ -2,10 +2,12 @@
 
 import TransportationBookingCard from "@/components/transport/TransportationBookingCard";
 import TransportLocationTooltip from "@/components/transport/TransportLocationTooltip";
-import { Transportation } from "@/interface/Transportation";
+import provinces from "@/data/provinces";
+import { Transportation, TransportationType, transportationTypes } from "@/interface/Transportation";
 import { TransportationBooking } from "@/interface/TransportationBooking";
 import getTransportations from "@/lib/transportation/getTransportations";
 import capitalize from "@/util/capitalize";
+import { useDebounceSearch } from "@/util/useDebounceSearch";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -25,6 +27,8 @@ interface TransportationBookingSectionProps {
   setPending: (pending: boolean) => void;
 }
 
+const pageSize = 5;
+
 export default function TransportationBookingSection({
   bookings = [],
   onEdit,
@@ -34,7 +38,15 @@ export default function TransportationBookingSection({
 }: TransportationBookingSectionProps) {
   const { data: session } = useSession();
   const [transports, setTransports] = useState<Transportation[]>([]);
+  
+  // Transport listing
   const [isExpanded, setExpanded] = useState(false);
+  const [search, setSearch] = useState("");
+  const [transportType, setTransportType] = useState<TransportationType | "">("");
+  const [province, setProvince] = useState("");
+  const [loadedPage, setLoadedPage] = useState(0);
+  const [canLoadMore, setCanLoadMore] = useState(false);
+  const [isLoadingMore, setLoadingMore] = useState(false);
 
   // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -47,6 +59,8 @@ export default function TransportationBookingSection({
   const [addDeparture, setAddDeparture] = useState("");
   const [addPassengers, setAddPassengers] = useState(1);
 
+  const searchQuery = useDebounceSearch(search);
+
   useEffect(() => {
     setPending(addingTransport !== null || editingId !== null);
   }, [addingTransport, editingId, setPending]);
@@ -54,15 +68,42 @@ export default function TransportationBookingSection({
   useEffect(() => {
     if (!session) return;
     const loadTransports = async () => {
-      const res = await getTransportations(session.user.token);
+      setLoadedPage(0);
+      const res = await getTransportations(session.user.token, { search: searchQuery, type: transportType, province, limit: pageSize });
       if (!res.success) {
         console.error("Error fetching transportation:", res.message);
         return;
       }
       setTransports(res.data);
+      setLoadedPage(1);
+      if (res.pagination.next) {
+        setCanLoadMore(true);
+      } else {
+        setCanLoadMore(false);
+      }
     };
     loadTransports();
-  }, [session]);
+  }, [session, searchQuery, transportType, province]);
+
+  const handleLoadMore = async () => {
+    if (!session) return;
+    setLoadingMore(true);
+    const res = await getTransportations(session.user.token, { search: searchQuery, type: transportType, province, limit: pageSize, page: loadedPage + 1 });
+    if (!res.success) {
+      console.error("Error fetching transportation:", res.message);
+      setLoadingMore(false);
+      return;
+    }
+    setTransports(transports.concat(res.data));
+    console.log(transports, res.data)
+    setLoadedPage(loadedPage + 1)
+    setLoadingMore(false);
+    if (res.pagination.next) {
+      setCanLoadMore(true);
+    } else {
+      setCanLoadMore(false);
+    }
+  };
 
   // --- Edit Existing Handlers ---
   const handleStartEdit = (tb: TransportationBooking) => {
@@ -295,14 +336,74 @@ export default function TransportationBookingSection({
 
         {/* Available Transport List */}
         {isExpanded && !addingTransport && (
-          <div className="flex gap-4 p-4 pt-0 overflow-x-auto">
-            {transports.map((transport) => (
-              <TransportationBookingCard
-                key={transport._id}
-                transport={transport}
-                handleBook={handleSelectTransportToAdd}
+          <div className="flex gap-2 flex-col p-4 pt-0">
+            <div className="flex gap-2 max-w-200">
+              <input
+                className="w-full rounded-l-2xl rounded-r-lg border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 placeholder:text-slate-400 placeholder:italic focus:border-indigo-500 focus:bg-white focus:outline-none
+                dark:bg-dark-primary dark:border-dark-secondary-1 dark:placeholder:text-secondary-gray dark:text-secondary-gray dark:focus:bg-dark-secondary"
+                placeholder="Search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
-            ))}
+              <select
+                className={`w-full rounded-l-lg rounded-r-lg border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 focus:border-indigo-500
+                dark:bg-dark-primary dark:border-dark-secondary-1 dark:placeholder:text-secondary-gray dark:text-secondary-gray dark:focus:bg-dark-secondary
+                focus:bg-white focus:outline-none ${transportType ? "text-slate-700" : "text-slate-400 italic"}`}
+                value={transportType}
+                onChange={(e) => setTransportType(e.target.value as TransportationType | "")}
+              >
+                <option label="Any type" />
+
+                {transportationTypes.map((type) => (<option key={type} value={type}>{capitalize(type)}</option>))}
+              </select>
+
+              <select
+                className={`w-full rounded-l-lg rounded-r-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-base font-medium text-slate-700 focus:border-indigo-500
+                dark:bg-dark-primary dark:border-dark-secondary-1 dark:placeholder:text-secondary-gray dark:text-secondary-gray dark:focus:bg-dark-secondary
+                focus:bg-white focus:outline-none ${province ? "text-slate-700" : "text-slate-400 italic"}`}
+                value={province}
+                onChange={(e) => setProvince(e.target.value)}
+              >
+                <option label="Any province" />
+
+                {provinces.map((province) => (<option key={province}>{province}</option>))}
+              </select>
+            </div>
+            <div className="pb-4 flex gap-4 overflow-x-auto">
+              {transports.map((transport) => (
+                <TransportationBookingCard
+                  key={transport._id}
+                  transport={transport}
+                  handleBook={handleSelectTransportToAdd}
+                />
+              ))}
+              {canLoadMore && (
+                <button
+                  className="px-4 py-2 rounded-xl self-center
+                  flex gap-3 [writing-mode:sideways-lr]
+                  transition duration-200 disabled:opacity-50 disabled:cursor-wait
+                  bg-primary hover:bg-accent focus:outline-none dark:bg-dark-primary dark:hover:bg-dark-secondary-0"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                >
+                  <div>
+                    Load more
+                  </div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    className="fill-none stroke-current"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m9 18 6-6-6-6"/>
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         )}
 
