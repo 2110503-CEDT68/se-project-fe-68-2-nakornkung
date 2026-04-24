@@ -8,12 +8,14 @@ import Hotel from "@/interface/Hotel";
 import getHotel from "@/lib/hotels/getHotel";
 import Loading from "@/components/Loading";
 import NearbyAttractionsViwe from "@/components/hotels/NearbyAttractionsViwe";
-import {useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 export default function HotelPage() {
   const { hotelId } = useParams<{ hotelId: string }>();
   const [hotel, setHotel] = useState<Hotel | null>(null);
-  
+  const { data: session } = useSession();
+  const isAdmin = session?.user.role === "admin";
+
   useEffect(() => {
     const loadHotel = async () => {
       const res = await getHotel(hotelId);
@@ -47,16 +49,32 @@ export default function HotelPage() {
         <div className="flex gap-30">
           <div className="flex gap-2 flex-col">
             <h2 className="text-2xl font-semibold">Address</h2>
-            <p className="text-xl font-normal ">{hotel.address}, {hotel.district}, {hotel.province} {hotel.postalcode}</p>
+            <p className="text-xl font-normal">{hotel.address}, {hotel.district}, {hotel.province} {hotel.postalcode}</p>
           </div>
           <div className="flex gap-2 flex-col">
             <h2 className="text-2xl font-semibold">Tel.</h2>
             <p className="text-xl font-medium">{hotel.tel}</p>
           </div>
         </div>
-        <Link className="px-6 py-2 self-center rounded-2xl bg-accent text-white text-xl font-bold dark:bg-dark-primary dark:hover:bg-dark-primary-0" href={`/book?hotel=${hotel._id}`}>Book</Link>
+        <Link
+          className="px-6 py-2 self-center rounded-2xl bg-accent text-white text-xl font-bold dark:bg-dark-primary dark:hover:bg-dark-primary-0"
+          href={`/book?hotel=${hotel._id}`}
+        >
+          Book
+        </Link>
       </div>
-      <NearbyAttractionsViwe></NearbyAttractionsViwe>
+      <NearbyAttractionsViwe />
+      {isAdmin && (
+        <div className="flex justify-center mx-20">
+          <Link
+            className="px-6 py-2 rounded-2xl bg-amber-500 text-white text-xl font-bold hover:bg-amber-600
+            dark:bg-amber-600 dark:text-white dark:hover:bg-amber-700"
+            href={`/hotels/${hotel._id}/attractions`}
+          >
+            Manage Attractions
+          </Link>
+        </div>
+      )}
     </main>
   );
 }

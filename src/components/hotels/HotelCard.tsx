@@ -1,16 +1,10 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import Hotel from "@/interface/Hotel";
 
 export default function HotelCard({ hotel }: { hotel: Hotel }) {
-  const { data: session } = useSession();
-  const isAdmin = session?.user.role === "admin";
-
   return (
-    <div className="flex flex-col w-full h-140 rounded-xl bg-secondary shadow-md overflow-clip hover:scale-103 transition-transform dark:bg-dark-secondary">
+    <div className="relative w-full h-140 rounded-xl bg-secondary shadow-md overflow-clip hover:scale-103 transition-transform dark:bg-dark-secondary">
       <Link
         className="flex w-full h-full gap-4 flex-col"
         href={`/hotels/${hotel._id}`}
@@ -29,25 +23,8 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
           <div className="mt-4 text-lg font-medium text-text-3 dark:text-text-3">{hotel.tel}</div>
         </div>
       </Link>
-
-      <div className="flex flex-wrap gap-2 justify-end px-6 py-4 shrink-0">
-        {isAdmin && (
-          <Link
-            className="px-6 py-2 rounded-2xl bg-amber-500 text-white text-xl font-bold hover:bg-amber-600
-            dark:bg-amber-600 dark:text-white dark:hover:bg-amber-700 dark:border dark:border-dark-secondary dark:hover:shadow-[0_2px_10px_rgba(255,255,255,0.1)]"
-            href={`/hotels/${hotel._id}/attractions`}
-          >
-            Manage Attractions
-          </Link>
-        )}
-        <Link
-          className="px-6 py-2 rounded-2xl bg-primary text-white text-xl font-bold hover:bg-accent
-          dark:bg-dark-primary dark:text-white dark:hover:bg-dark-secondary-0 dark:border dark:border-dark-secondary dark:hover:shadow-[0_2px_10px_rgba(255,255,255,0.1)]"
-          href={`/book?hotel=${hotel._id}`}
-        >
-          Book
-        </Link>
-      </div>
+      <Link className="absolute right-8 bottom-6 px-6 py-2 rounded-2xl bg-primary text-white text-xl font-bold hover:bg-accent 
+      dark:bg-dark-primary dark:text-white dark:hover:bg-dark-secondary-0 dark:border dark:border-dark-secondary dark:hover:shadow-[0_2px_10px_rgba(255,255,255,0.1)]" href={`/book?hotel=${hotel._id}`}>Book</Link>
     </div>
   );
 }
