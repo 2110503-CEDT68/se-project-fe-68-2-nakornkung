@@ -7,7 +7,7 @@ import Link from "next/link";
 import Hotel from "@/interface/Hotel";
 import getHotel from "@/lib/hotels/getHotel";
 import Loading from "@/components/Loading";
-
+import NearbyAttractionsViwe from "@/components/hotels/NearbyAttractionsViwe";
 export default function HotelPage() {
   const { hotelId } = useParams<{ hotelId: string }>();
   const [hotel, setHotel] = useState<Hotel | null>(null);
@@ -54,6 +54,7 @@ export default function HotelPage() {
         </div>
         <Link className="px-6 py-2 self-center rounded-2xl bg-accent text-white text-xl font-bold dark:bg-dark-primary dark:hover:bg-dark-primary-0" href={`/book?hotel=${hotel._id}`}>Book</Link>
       </div>
+      <NearbyAttractionsViwe></NearbyAttractionsViwe>
     </main>
   );
 }
