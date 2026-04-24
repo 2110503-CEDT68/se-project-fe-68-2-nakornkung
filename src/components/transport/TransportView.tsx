@@ -48,7 +48,7 @@ export default function TransportView({ name: defaultName, provider: defaultProv
   return (
     <main className="flex my-8 px-10 w-full xl:w-7/8 gap-8 flex-col items-center">
       <div className="flex gap-8 w-full max-w-300 items-start flex-col">
-        <TransportSearch name={name} provider={provider} type={type} province={province} setName={setName} setProvider={setProvider} setType={setType} setProvince={setProvince} automatic />
+        <TransportSearch name={name} provider={provider} type={type} province={province} setName={setName} setProvider={setProvider} setType={setType} setProvince={setProvince} />
         <div className="flex w-full gap-4 flex-col items-center">
           {transportations.length || firstLoad ? (
             <div className="flex ml-20 self-start items-center gap-12">

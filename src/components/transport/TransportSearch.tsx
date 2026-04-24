@@ -15,10 +15,9 @@ interface TransportSearchProps {
   setProvider: (provider: string) => void;
   setType: (type: TransportationType | "") => void;
   setProvince: (province: string) => void;
-  automatic?: boolean;
 }
 
-export default function TransportSearch({ name, provider, type, province, setName, setProvider, setType, setProvince, automatic }: TransportSearchProps) {
+export default function TransportSearch({ name, provider, type, province, setName, setProvider, setType, setProvince }: TransportSearchProps) {
   return (
     <div className="flex p-4 gap-4 justify-between rounded-3xl bg-secondary dark:bg-dark-secondary">
       <div className="grid gap-3 md:col-span-4 md:grid-cols-4">
