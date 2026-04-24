@@ -27,6 +27,8 @@ interface TransportationBookingSectionProps {
   setPending: (pending: boolean) => void;
 }
 
+const pageSize = 5;
+
 export default function TransportationBookingSection({
   bookings = [],
   onEdit,
@@ -42,6 +44,9 @@ export default function TransportationBookingSection({
   const [search, setSearch] = useState("");
   const [transportType, setTransportType] = useState<TransportationType | "">("");
   const [province, setProvince] = useState("");
+  const [loadedPage, setLoadedPage] = useState(0);
+  const [canLoadMore, setCanLoadMore] = useState(false);
+  const [isLoadingMore, setLoadingMore] = useState(false);
 
   // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -63,15 +68,42 @@ export default function TransportationBookingSection({
   useEffect(() => {
     if (!session) return;
     const loadTransports = async () => {
-      const res = await getTransportations(session.user.token, { search: searchQuery, type: transportType, province });
+      setLoadedPage(0);
+      const res = await getTransportations(session.user.token, { search: searchQuery, type: transportType, province, limit: pageSize });
       if (!res.success) {
         console.error("Error fetching transportation:", res.message);
         return;
       }
       setTransports(res.data);
+      setLoadedPage(1);
+      if (res.pagination.next) {
+        setCanLoadMore(true);
+      } else {
+        setCanLoadMore(false);
+      }
     };
     loadTransports();
   }, [session, searchQuery, transportType, province]);
+
+  const handleLoadMore = async () => {
+    if (!session) return;
+    setLoadingMore(true);
+    const res = await getTransportations(session.user.token, { search: searchQuery, type: transportType, province, limit: pageSize, page: loadedPage + 1 });
+    if (!res.success) {
+      console.error("Error fetching transportation:", res.message);
+      setLoadingMore(false);
+      return;
+    }
+    setTransports(transports.concat(res.data));
+    console.log(transports, res.data)
+    setLoadedPage(loadedPage + 1)
+    setLoadingMore(false);
+    if (res.pagination.next) {
+      setCanLoadMore(true);
+    } else {
+      setCanLoadMore(false);
+    }
+  };
 
   // --- Edit Existing Handlers ---
   const handleStartEdit = (tb: TransportationBooking) => {
@@ -337,7 +369,7 @@ export default function TransportationBookingSection({
                 {provinces.map((province) => (<option key={province}>{province}</option>))}
               </select>
             </div>
-            <div className="flex gap-4 overflow-x-auto">
+            <div className="pb-4 flex gap-4 overflow-x-auto">
               {transports.map((transport) => (
                 <TransportationBookingCard
                   key={transport._id}
@@ -345,6 +377,32 @@ export default function TransportationBookingSection({
                   handleBook={handleSelectTransportToAdd}
                 />
               ))}
+              {canLoadMore && (
+                <button
+                  className="px-4 py-2 rounded-xl self-center
+                  flex gap-3 [writing-mode:sideways-lr]
+                  transition duration-200 disabled:opacity-50 disabled:cursor-wait
+                  bg-primary hover:bg-accent focus:outline-none dark:bg-dark-primary dark:hover:bg-dark-secondary-0"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                >
+                  <div>
+                    Load more
+                  </div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    className="fill-none stroke-current"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="m9 18 6-6-6-6"/>
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         )}
