@@ -1,10 +1,8 @@
 "use client";
 
 import provinces from "@/data/provinces";
-import { TransportationType } from "@/interface/Transportation";
+import { TransportationType, transportationTypes } from "@/interface/Transportation";
 import capitalize from "@/util/capitalize";
-
-const transportationTypes: TransportationType[] = ["car", "airplane", "boat", "bus", "van", "shuttle"];
 
 interface TransportSearchProps {
   name: string;

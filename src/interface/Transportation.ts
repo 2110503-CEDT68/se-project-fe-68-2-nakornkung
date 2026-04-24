@@ -10,7 +10,8 @@ export interface Location {
   address: Address;
 }
 
-export type TransportationType = "car" | "airplane" | "boat" | "bus" | "van" | "shuttle";
+export const transportationTypes = ["car", "airplane", "boat", "bus", "van", "shuttle"] as const;
+export type TransportationType = typeof transportationTypes[number];
 
 export interface Transportation {
   _id: string;
