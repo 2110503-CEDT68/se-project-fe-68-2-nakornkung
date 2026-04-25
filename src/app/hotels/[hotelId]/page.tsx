@@ -7,7 +7,7 @@ import Link from "next/link";
 import Hotel from "@/interface/Hotel";
 import getHotel from "@/lib/hotels/getHotel";
 import Loading from "@/components/Loading";
-import NearbyAttractionsViwe from "@/components/hotels/NearbyAttractionsViwe";
+import AttractionsView from "@/components/attraction/AttractionsView";
 import { useSession } from "next-auth/react";
 
 export default function HotelPage() {
@@ -63,18 +63,9 @@ export default function HotelPage() {
           Book
         </Link>
       </div>
-      <NearbyAttractionsViwe />
-      {isAdmin && (
-        <div className="flex justify-center mx-20">
-          <Link
-            className="px-6 py-2 rounded-2xl bg-amber-500 text-white text-xl font-bold hover:bg-amber-600
-            dark:bg-amber-600 dark:text-white dark:hover:bg-amber-700"
-            href={`/hotels/${hotel._id}/attractions`}
-          >
-            Manage Attractions
-          </Link>
-        </div>
-      )}
+      <>      
+        <AttractionsView hotelId={hotelId} isAdmin={isAdmin} />
+      </>
     </main>
   );
 }
