@@ -12,6 +12,7 @@ import TransportationBookingSection from "@/components/transport/TransportationB
 import { TransportationBooking } from "@/interface/TransportationBooking";
 import { Transportation } from "@/interface/Transportation";
 import createTransportationBooking from "@/lib/transportationBooking/createTransportation";
+import Hotel from "@/interface/Hotel";
 
 export default function BookingPanel() {
     const { data: session } = useSession();
@@ -19,10 +20,9 @@ export default function BookingPanel() {
     const searchParams = useSearchParams();
     const hotelId = searchParams.get("hotel") ?? "";
 
-    const [hotelName, setHotelName] = useState<string>("");
+    const [hotel, setHotel] = useState<Hotel | null>(null);
     const [checkInDate, setCheckInDate] = useState<string>("");
     const [checkOutDate, setCheckOutDate] = useState<string>("");
-    const [hotelImage, setHotelImage] = useState<string>("");
     
     // Use the unified TransportationBooking interface with temporary IDs for pending bookings
     const [transportBookings, setTransportBookings] = useState<TransportationBooking[]>([]);
@@ -42,8 +42,7 @@ export default function BookingPanel() {
             try {
                 const response = await getHotel(hotelId);
                 if (response.success && response.data) {
-                    setHotelName(response.data.name);
-                    setHotelImage(response.data.img || "");
+                    setHotel(response.data);
                 } else {
                     setErrorMessage("Failed to load hotel information");
                 }
@@ -161,7 +160,7 @@ export default function BookingPanel() {
 
                 const errors = transportBookingResults.filter((res) => !res.success).map((res) => res.message);
                 if (errors.length === 0) {
-                    setSuccessMessage(`Booking ${hotelName} from ${checkInDate} to ${checkOutDate} (${numberOfNights} nights) with ${transportBookings.length} transport bookings success!`);
+                    setSuccessMessage(`Booking ${hotel?.name} from ${checkInDate} to ${checkOutDate} (${numberOfNights} nights) with ${transportBookings.length} transport bookings success!`);
                     setTimeout(() => {
                         router.push('/booking');
                     }, 2500);
@@ -189,8 +188,8 @@ export default function BookingPanel() {
                         <input
                             type="text"
                             className="p-3 border border-gray-300 rounded-xl bg-secondary-gray focus:outline-none dark:bg-dark-secondary-0 dark:border-none"
-                            placeholder={hotelName ? "" : loadingHotel ? "Loading hotel..." : "No hotel selected"}
-                            value={hotelName}
+                            placeholder={hotel?.name ? "" : loadingHotel ? "Loading hotel..." : "No hotel selected"}
+                            value={hotel?.name ?? ""}
                             readOnly
                         />
                     </div>
@@ -221,8 +220,8 @@ export default function BookingPanel() {
 
                 <div className="relative h-64 rounded-4xl overflow-hidden select-none mt-4">
                     <Image
-                        src={hotelImage || "/banner.jpg"}
-                        alt={`Image of ${hotelName || "hotel"}`}
+                        src={hotel?.img || "/banner.jpg"}
+                        alt={`Image of ${hotel?.name || "hotel"}`}
                         fill
                         className="object-cover"
                     />
@@ -235,6 +234,7 @@ export default function BookingPanel() {
                 onEdit={handleEditTransport}
                 onDelete={handleDeleteTransport}
                 setPending={setTransportationPending}
+                defaultProvince={hotel?.province ?? ""}
             />
 
             {errorMessage && (

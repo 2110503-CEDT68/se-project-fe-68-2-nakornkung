@@ -25,6 +25,7 @@ interface TransportationBookingSectionProps {
     passengers: number
   ) => Promise<void>;
   setPending: (pending: boolean) => void;
+  defaultProvince: string;
 }
 
 const pageSize = 5;
@@ -35,6 +36,7 @@ export default function TransportationBookingSection({
   onDelete,
   onAdd,
   setPending,
+  defaultProvince,
 }: TransportationBookingSectionProps) {
   const { data: session } = useSession();
   const [transports, setTransports] = useState<Transportation[]>([]);
@@ -64,6 +66,10 @@ export default function TransportationBookingSection({
   useEffect(() => {
     setPending(addingTransport !== null || editingId !== null);
   }, [addingTransport, editingId, setPending]);
+
+  useEffect(() => {
+    setProvince((curr) => curr || defaultProvince);
+  }, [defaultProvince]);
 
   useEffect(() => {
     if (!session) return;
