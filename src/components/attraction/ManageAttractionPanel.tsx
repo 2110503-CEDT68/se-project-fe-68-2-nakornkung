@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import AttractionCard from "./AttractionCard";
 import PaginationControls from "@/components/PaginationControls"; 
+import deleteAttraction from "@/lib/attraction/deleteAttraction";
 
 type ManageAttractionPanelProps = {
   items: any[];
@@ -38,15 +39,24 @@ export default function ManageAttractionPanel({ items: initialItems, hotelId, on
     }
   };
 
-  const handleDelete = async (attractionId: string) => {
-    if (!session?.user?.token) return;
-    try {
-      setItems((current) => current.filter((item) => item.id !== attractionId));
-      if (onUpdate) await onUpdate();
-    } catch (error) {
-      console.error("Error deleting attraction:", error);
+const handleDelete = async (attractionId: string) => {
+  if (!session?.user?.token) return;
+
+  try {
+    const res = await deleteAttraction(attractionId, session.user.token);
+
+    if (!res.success) {
+      console.error("Error deleting attraction:", res.message);
+      return;
     }
-  };
+
+    setItems((current) => current.filter((item) => item.id !== attractionId));
+
+    if (onUpdate) await onUpdate();
+  } catch (error) {
+    console.error("Error deleting attraction:", error);
+  }
+};
 
   return (
     <div className="flex flex-col gap-4">
