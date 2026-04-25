@@ -18,7 +18,7 @@ export default async function HotelAttractionsPage({
         Manage Attractions
       </h1>
 
-      <ManageAttractionPanel items={attractions} HotelID={params.hotelId}/>
+      <ManageAttractionPanel items={attractions} hotelId={params.hotelId}/>
     </main>
   );
 }
