@@ -221,6 +221,7 @@ export default function BookingCard({
           onEdit={handleEditTransport}
           onDelete={handleDeleteTransport}
           setPending={setTransportationPending}
+          defaultProvince={hotel.province}
         />
       ) : (
         transportBookings.length > 0 && (
