@@ -31,6 +31,12 @@ export default function AdminPage() {
         >
           Manage Transport
         </Link>
+        <Link
+          className="flex min-h-48 p-10 flex-col items-center justify-center rounded-xl bg-secondary border-2 border-primary shadow-sm shadow-black text-center text-balance text-lg font-bold transition hover:-translate-y-1 dark:border-none dark:bg-dark-primary dark:text-white dark:hover:bg-dark-primary-0"
+          href="/admin/attractions"
+        >
+          Manage Attractions
+        </Link>
       </div>
     </main>
   );
