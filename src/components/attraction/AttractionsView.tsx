@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import AttractionCard from "./AttractionCard";
-import { attractions } from "./MockUpAttraction";
+import getAttractions from "@/lib/attraction/getAttractions";
+import { Attraction } from "@/interface/Attraction";
 
 interface AttractionsViewProps {
   hotelId: string;
@@ -10,6 +12,28 @@ interface AttractionsViewProps {
 }
 
 export default function AttractionsView({ hotelId, isAdmin }: AttractionsViewProps) {
+  const [attractions, setAttractions] = useState<Attraction[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAttractions = async () => {
+      setLoading(true);
+      setError(null);
+      const res = await getAttractions();
+      if (res.success) {
+        setAttractions(res.data);
+        setTotal(res.total);
+      } else {
+        setError(res.message ?? "Failed to load attractions");
+      }
+      setLoading(false);
+    };
+
+    fetchAttractions();
+  }, []);
+
   return (
     <main className="flex my-8 px-10 w-full xl:w-7/8 gap-8 flex-col items-center">
       <div className="flex gap-8 w-full max-w-7xl flex-col">
@@ -21,17 +45,35 @@ export default function AttractionsView({ hotelId, isAdmin }: AttractionsViewPro
               Nearby Attractions
             </h2>
             <p className="text-lg font-medium text-text-3 dark:text-text-3">
-              {attractions.length} spots
+              {loading ? "Loading..." : `${total} spots`}
             </p>
           </div>
         </div>
 
+        {/* States */}
+        {loading && (
+          <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-64 rounded-2xl bg-slate-100 animate-pulse dark:bg-[#312b50]"
+              />
+            ))}
+          </div>
+        )}
+
+        {error && !loading && (
+          <p className="text-center text-red-500">{error}</p>
+        )}
+
         {/* Grid */}
-        <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {attractions.map((attraction) => (
-            <AttractionCard key={attraction.id} attraction={attraction} />
-          ))}
-        </div>
+        {!loading && !error && (
+          <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {attractions.map((attraction) => (
+              <AttractionCard key={attraction._id} attraction={attraction} />
+            ))}
+          </div>
+        )}
 
       </div>
 

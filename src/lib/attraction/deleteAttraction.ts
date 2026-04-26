@@ -14,7 +14,7 @@ export default async function deleteAttraction(id: string, token: string) {
   } catch (error) {
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Failed to delete attraction",
+      deleteAttractionmessage: error instanceof Error ? error.message : "Failed to delete attraction",
     };
   }
 }
