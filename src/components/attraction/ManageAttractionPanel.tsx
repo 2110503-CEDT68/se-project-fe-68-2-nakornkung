@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import AttractionCard from "./AttractionCard";
 import PaginationControls from "@/components/PaginationControls"; 
 import deleteAttraction from "@/lib/attraction/deleteAttraction";
+import ManageAttractionCard from "./Manage AttractionCard";
 
 type ManageAttractionPanelProps = {
   items: any[];
@@ -81,7 +82,7 @@ const handleDelete = async (attractionId: string) => {
 
       <div className="flex flex-col gap-4">
         {paginatedItems.map((attraction) => (
-          <AttractionCard 
+          <ManageAttractionCard 
             key={attraction.id} 
             attraction={attraction} 
             onSave={handleSave}
