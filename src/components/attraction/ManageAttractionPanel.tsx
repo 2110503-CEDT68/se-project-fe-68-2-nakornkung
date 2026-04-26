@@ -3,61 +3,78 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import AttractionCard from "./AttractionCard";
 import PaginationControls from "@/components/PaginationControls"; 
 import deleteAttraction from "@/lib/attraction/deleteAttraction";
-import ManageAttractionCard from "./Manage AttractionCard";
+//import updateAttraction from "@/lib/attraction/updateAttraction"; 
+import ManageAttractionCard from "./ManageAttractionCard";
+import { Attraction } from "@/interface/Attraction"; // Assuming you have this interface
 
 type ManageAttractionPanelProps = {
-  items: any[];
+  items: Attraction[]; // TYPING FIX: Replaced any[] with the actual interface
   hotelId: string;
   onUpdate?: () => Promise<void>;
 };
 
 export default function ManageAttractionPanel({ items: initialItems, hotelId, onUpdate }: ManageAttractionPanelProps) {
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState<Attraction[]>(initialItems);
   const { data: session } = useSession();
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const total = items.length;
-  const pages = Math.ceil(total / limit);
+  const pages = Math.ceil(total / limit) || 1; // Prevent NaN or 0 if array is empty
   const startIndex = (page - 1) * limit;
 
   const paginatedItems = items.slice(startIndex, startIndex + limit);
 
-  const handleSave = async (attractionId: string, updatedData: any) => {
+  const handleSave = async (attractionId: string, updatedData: Partial<Attraction>) => {
     if (!session?.user?.token) return;
+    
     try {
+      {/*uncomment this when implement the edit API*/}
+      /*
+      // LOGIC FIX: Call your backend API to actually save the data
+      const res = await updateAttraction(attractionId, updatedData, session.user.token);
+      
+      if (!res.success) {
+        console.error("Error updating attraction on server:", res.message);
+        alert(`Failed to save: ${res.message}`);
+        return;
+      }
+      */
+
+      // Update local state only AFTER a successful backend save
       setItems((current) =>
         current.map((item) =>
           item.id === attractionId ? { ...item, ...updatedData } : item
         )
       );
+      
       if (onUpdate) await onUpdate();
     } catch (error) {
       console.error("Error updating attraction:", error);
+      alert("Something went wrong while saving.");
     }
   };
 
-const handleDelete = async (attractionId: string) => {
-  if (!session?.user?.token) return;
+  const handleDelete = async (attractionId: string) => {
+    if (!session?.user?.token) return;
 
-  try {
-    const res = await deleteAttraction(attractionId, session.user.token);
+    try {
+      const res = await deleteAttraction(attractionId, session.user.token);
 
-    if (!res.success) {
-      console.error("Error deleting attraction:", res.message);
-      return;
+      if (!res.success) {
+        console.error("Error deleting attraction:", res.message);
+        return;
+      }
+
+      setItems((current) => current.filter((item) => item.id !== attractionId));
+
+      if (onUpdate) await onUpdate();
+    } catch (error) {
+      console.error("Error deleting attraction:", error);
     }
-
-    setItems((current) => current.filter((item) => item.id !== attractionId));
-
-    if (onUpdate) await onUpdate();
-  } catch (error) {
-    console.error("Error deleting attraction:", error);
-  }
-};
+  };
 
   return (
     <div className="flex flex-col gap-4">
