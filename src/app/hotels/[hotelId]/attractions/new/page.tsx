@@ -1,16 +1,16 @@
 import CreateAttractionPanel from "@/components/attraction/CreateAttractionPanel";
 
-type Props = {
-  params: { hotelId: string };
-};
+export default async function CreateAttractionPage({
+  params,
+}: {
+  params: Promise<{ hotelId: string }>;
+}) {
+  const { hotelId } = await params;
 
-export default function CreateAttraction({ params }: Props) {
   return (
     <main className="flex flex-col my-8 px-10 w-3xl max-w-full h-full items-center gap-4">
-      <div className="text-4xl font-bold mt-2">
-        Create Attraction
-      </div>
-      <CreateAttractionPanel hotelId={params.hotelId} />
+      <div className="text-4xl font-bold mt-2">Create Attraction</div>
+      <CreateAttractionPanel hotelId={hotelId} />
     </main>
   );
 }

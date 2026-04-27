@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AttractionCard from "./AttractionCard";
-import getAttractions from "@/lib/attraction/getAttractions";
+import getAttractionsByHotel from "@/lib/attraction/getAttractionsByHotel";
 import { Attraction } from "@/interface/Attraction";
 
 interface AttractionsViewProps {
@@ -21,7 +21,7 @@ export default function AttractionsView({ hotelId, isAdmin }: AttractionsViewPro
     const fetchAttractions = async () => {
       setLoading(true);
       setError(null);
-      const res = await getAttractions();
+      const res = await getAttractionsByHotel(hotelId);
       if (res.success) {
         setAttractions(res.data);
         setTotal(res.total);
@@ -32,7 +32,7 @@ export default function AttractionsView({ hotelId, isAdmin }: AttractionsViewPro
     };
 
     fetchAttractions();
-  }, []);
+  }, [hotelId]);
 
   return (
     <main className="flex my-8 px-10 w-full xl:w-7/8 gap-8 flex-col items-center">
@@ -69,8 +69,8 @@ export default function AttractionsView({ hotelId, isAdmin }: AttractionsViewPro
         {/* Grid */}
         {!loading && !error && (
           <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {attractions.map((attraction) => (
-              <AttractionCard key={attraction._id} attraction={attraction} />
+            {attractions.filter((a) => !!a._id).map((attraction, i) => (
+              <AttractionCard key={attraction._id ?? i} attraction={attraction} />
             ))}
           </div>
         )}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import createAttraction from "@/lib/attraction/createAttraction";
+import addAttractionToHotel from "@/lib/attraction/addAttractionToHotel";
 import { Attraction } from "@/interface/Attraction";
 
 const DAYS = [
@@ -114,6 +115,13 @@ export default function CreateAttractionPanel({ hotelId }: { hotelId: string }) 
 
       if (!result.success) {
         setError(result.message ?? "Failed to create attraction.");
+        return;
+      }
+
+      const linkResult = await addAttractionToHotel(hotelId, result.data._id, session.user.token);
+
+      if (!linkResult.success) {
+        setError(linkResult.message ?? "Attraction created but failed to link to hotel.");
         return;
       }
 

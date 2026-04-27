@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import PaginationControls from "@/components/PaginationControls";
 import deleteAttraction from "@/lib/attraction/deleteAttraction";
+import removeAttractionFromHotel from "@/lib/attraction/removeAttractionFromHotel";
 import ManageAttractionCard from "./ManageAttractionCard";
 import { Attraction } from "@/interface/Attraction";
 
@@ -49,6 +50,12 @@ export default function ManageAttractionPanel({
         return;
       }
 
+      const unlinkRes = await removeAttractionFromHotel(hotelId, attractionId, session.user.token);
+
+      if (!unlinkRes.success) {
+        console.error("Attraction deleted but failed to unlink from hotel:", unlinkRes.message);
+      }
+
       setItems((current) => current.filter((item) => item._id !== attractionId));
       onUpdate?.();
     } catch (error) {
@@ -78,9 +85,9 @@ export default function ManageAttractionPanel({
       </div>
 
       <div className="flex flex-col gap-4">
-        {paginatedItems.map((attraction) => (
+        {paginatedItems.filter((a) => !!a._id).map((attraction, i) => (
           <ManageAttractionCard
-            key={attraction._id}
+            key={attraction._id ?? i}
             attraction={attraction}
             token={session?.user?.token ?? ""}
             onSaved={handleSaved}

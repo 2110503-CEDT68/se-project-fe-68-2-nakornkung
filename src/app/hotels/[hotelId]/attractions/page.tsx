@@ -1,7 +1,5 @@
 import ManageAttractionPanel from "@/components/attraction/ManageAttractionPanel";
-// import getAttractionsByHotel from "@/lib/attractions/getAttractionsByHotel";
-// import { attractions } from "@/components/attraction/MockUpAttraction";
-import getAttractions from "@/lib/attraction/getAttractions";
+import getAttractionsByHotel from "@/lib/attraction/getAttractionsByHotel";
 
 export default async function HotelAttractionsPage({
   params,
@@ -10,7 +8,7 @@ export default async function HotelAttractionsPage({
 }) {
   const { hotelId } = await params;
 
-  const res = await getAttractions();
+  const res = await getAttractionsByHotel(hotelId);
   const attractions = res.success ? res.data : [];
 
   return (
