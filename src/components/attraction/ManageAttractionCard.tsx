@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { Attraction, OpeningHour } from "@/interface/Attraction";
 import Image from "next/image";
+import updateAttraction from "@/lib/attraction/updateAttraction";
 
 type ManageAttractionCardProps = {
   attraction: Attraction;
-  onSave: (id: string, updatedData: Partial<Attraction>) => Promise<void>;
+  token: string;
+  onSaved?: (id: string, updatedAttraction: Attraction) => void;
   onDelete: (id: string) => void | Promise<void>;
 };
 
@@ -43,11 +45,13 @@ const buildInitialFormData = (a: Attraction) => ({
 
 export default function ManageAttractionCard({
   attraction,
-  onSave,
+  token,
+  onSaved,
   onDelete,
 }: ManageAttractionCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState(buildInitialFormData(attraction));
 
   const isOpen = getIsOpen(attraction.openingHours);
@@ -65,21 +69,33 @@ export default function ManageAttractionCard({
 
   const handleSave = async () => {
     setIsLoading(true);
+    setError(null);
     try {
-      await onSave(attraction._id, {
-        name: formData.name,
-        description: formData.description,
-        address: {
-          street: formData.street,
-          district: formData.district,
-          province: formData.province,
-          postalCode: formData.postalCode,
+      const result = await updateAttraction(
+        attraction._id,
+        {
+          name: formData.name,
+          description: formData.description,
+          address: {
+            street: formData.street,
+            district: formData.district,
+            province: formData.province,
+            postalCode: formData.postalCode,
+          },
         },
-      });
+        token
+      );
+
+      if (!result.success) {
+        setError(result.message ?? "Failed to update attraction.");
+        return;
+      }
+
+      onSaved?.(attraction._id, result.data);
       setIsEditing(false);
-    } catch (error) {
-      console.error("Error updating attraction:", error);
-      handleCancel();
+    } catch (err) {
+      console.error("Error updating attraction:", err);
+      setError("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
@@ -87,6 +103,7 @@ export default function ManageAttractionCard({
 
   const handleCancel = () => {
     setFormData(buildInitialFormData(attraction));
+    setError(null);
     setIsEditing(false);
   };
 
@@ -113,6 +130,11 @@ export default function ManageAttractionCard({
       <div className="min-w-0 space-y-3 ml-15">
         {isEditing ? (
           <div className="grid gap-4">
+            {error && (
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">
+                {error}
+              </p>
+            )}
             <div className="grid gap-3 md:grid-cols-2">
               {/* Name */}
               <div className="flex flex-col gap-1">

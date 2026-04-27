@@ -1,7 +1,16 @@
-export default function (){
-    return (
-        <div>
-            To be Implemented.
-        </div>
-    );
+import CreateAttractionPanel from "@/components/attraction/CreateAttractionPanel";
+
+type Props = {
+  params: { hotelId: string };
+};
+
+export default function CreateAttraction({ params }: Props) {
+  return (
+    <main className="flex flex-col my-8 px-10 w-3xl max-w-full h-full items-center gap-4">
+      <div className="text-4xl font-bold mt-2">
+        Create Attraction
+      </div>
+      <CreateAttractionPanel hotelId={params.hotelId} />
+    </main>
+  );
 }

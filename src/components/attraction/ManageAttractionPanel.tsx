@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import PaginationControls from "@/components/PaginationControls";
 import deleteAttraction from "@/lib/attraction/deleteAttraction";
-// import updateAttraction from "@/lib/attraction/updateAttraction";
 import ManageAttractionCard from "./ManageAttractionCard";
 import { Attraction } from "@/interface/Attraction";
 
@@ -30,33 +29,13 @@ export default function ManageAttractionPanel({
   const startIndex = (page - 1) * limit;
   const paginatedItems = items.slice(startIndex, startIndex + limit);
 
-  const handleSave = async (attractionId: string, updatedData: Partial<Attraction>) => {
-    if (!session?.user?.token) return;
-
-    try {
-      {/*uncomment this when implement the edit API*/}
-      /*
-      // LOGIC FIX: Call your backend API to actually save the data
-      const res = await updateAttraction(attractionId, updatedData, session.user.token);
-      
-      if (!res.success) {
-        console.error("Error updating attraction on server:", res.message);
-        alert(`Failed to save: ${res.message}`);
-        return;
-      }
-      */
-
-      setItems((current) =>
-        current.map((item) =>
-          item._id === attractionId ? { ...item, ...updatedData } : item
-        )
-      );
-
-      if (onUpdate) await onUpdate();
-    } catch (error) {
-      console.error("Error updating attraction:", error);
-      alert("Something went wrong while saving.");
-    }
+  const handleSaved = (attractionId: string, updatedAttraction: Attraction) => {
+    setItems((current) =>
+      current.map((item) =>
+        item._id === attractionId ? updatedAttraction : item
+      )
+    );
+    onUpdate?.();
   };
 
   const handleDelete = async (attractionId: string) => {
@@ -71,8 +50,7 @@ export default function ManageAttractionPanel({
       }
 
       setItems((current) => current.filter((item) => item._id !== attractionId));
-
-      if (onUpdate) await onUpdate();
+      onUpdate?.();
     } catch (error) {
       console.error("Error deleting attraction:", error);
     }
@@ -104,7 +82,8 @@ export default function ManageAttractionPanel({
           <ManageAttractionCard
             key={attraction._id}
             attraction={attraction}
-            onSave={handleSave}
+            token={session?.user?.token ?? ""}
+            onSaved={handleSaved}
             onDelete={handleDelete}
           />
         ))}
