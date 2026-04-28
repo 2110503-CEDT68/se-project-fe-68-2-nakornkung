@@ -11,10 +11,9 @@ test("TC1.01 - user can view bookings with transportation on booking page", asyn
 
   await expect(page.getByText("My Bookings")).toBeVisible();
 
-  // รอให้ booking list และ transport bookings โหลด
   await page.waitForLoadState("networkidle");
 
-  await expect(page.getByText("Transportation")).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText(/departure :/i)).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText(/passengers :/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText("Transportation", { exact: true }).first()).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/departure :/i).first()).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/passengers :/i).first()).toBeVisible({ timeout: 15000 });
 });

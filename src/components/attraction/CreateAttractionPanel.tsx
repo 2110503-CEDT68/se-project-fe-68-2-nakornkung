@@ -59,6 +59,8 @@ export default function CreateAttractionPanel({ hotelId }: { hotelId: string }) 
     province: "",
     postalCode: "",
     img: "",
+    latitude: "",
+    longitude: "",
   });
 
   const [openingHours, setOpeningHours] = useState<OpeningHoursForm>(defaultHours());
@@ -97,6 +99,14 @@ export default function CreateAttractionPanel({ hotelId }: { hotelId: string }) 
         ])
       );
 
+      const latitude = Number(formData.latitude);
+      const longitude = Number(formData.longitude);
+
+      if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
+        setError("Latitude and Longitude are required and must be valid numbers.");
+        return;
+      }
+
       const payload: Omit<Attraction, "_id" | "createdAt"> = {
         name: formData.name,
         description: formData.description,
@@ -106,6 +116,10 @@ export default function CreateAttractionPanel({ hotelId }: { hotelId: string }) 
           district: formData.district,
           province: formData.province,
           postalCode: formData.postalCode,
+        },
+        location: {
+          type: "Point",
+          coordinates: [longitude, latitude],
         },
         openingHours: Object.keys(hours).length > 0 ? hours : undefined,
         img: formData.img,
@@ -118,7 +132,11 @@ export default function CreateAttractionPanel({ hotelId }: { hotelId: string }) 
         return;
       }
 
-      const linkResult = await addAttractionToHotel(hotelId, result.data._id, session.user.token);
+      const linkResult = await addAttractionToHotel(
+        hotelId,
+        result.data._id,
+        session.user.token
+      );
 
       if (!linkResult.success) {
         setError(linkResult.message ?? "Attraction created but failed to link to hotel.");
@@ -136,7 +154,6 @@ export default function CreateAttractionPanel({ hotelId }: { hotelId: string }) 
 
   return (
     <div className="w-full max-w-2xl flex flex-col gap-6">
-
       {error && (
         <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">
           {error}
@@ -150,16 +167,32 @@ export default function CreateAttractionPanel({ hotelId }: { hotelId: string }) 
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1">
-            <label className={labelClass}>Name <span className="text-red-500">*</span></label>
-            <input name="name" value={formData.name} onChange={handleChange} className={inputClass} placeholder="e.g. Wat Pho" />
+            <label className={labelClass}>
+              Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="e.g. Wat Pho"
+            />
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className={labelClass}>Category <span className="text-red-500">*</span></label>
-            <select name="category" value={formData.category} onChange={handleChange}
-              className={inputClass}>
+            <label className={labelClass}>
+              Category <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              className={inputClass}
+            >
               {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                <option key={c} value={c}>
+                  {c.charAt(0).toUpperCase() + c.slice(1)}
+                </option>
               ))}
             </select>
           </div>
@@ -177,8 +210,16 @@ export default function CreateAttractionPanel({ hotelId }: { hotelId: string }) 
           </div>
 
           <div className="flex flex-col gap-1 md:col-span-2">
-            <label className={labelClass}>Image URL <span className="text-red-500">*</span></label>
-            <input name="img" value={formData.img} onChange={handleChange} className={inputClass} placeholder="https://..." />
+            <label className={labelClass}>
+              Image URL <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="img"
+              value={formData.img}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="https://..."
+            />
           </div>
         </div>
       </section>
@@ -191,19 +232,76 @@ export default function CreateAttractionPanel({ hotelId }: { hotelId: string }) 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1 md:col-span-2">
             <label className={labelClass}>Street</label>
-            <input name="street" value={formData.street} onChange={handleChange} className={inputClass} placeholder="123 Example Rd" />
+            <input
+              name="street"
+              value={formData.street}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="123 Example Rd"
+            />
           </div>
+
           <div className="flex flex-col gap-1">
-            <label className={labelClass}>District <span className="text-red-500">*</span></label>
-            <input name="district" value={formData.district} onChange={handleChange} className={inputClass} placeholder="District" />
+            <label className={labelClass}>
+              District <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="district"
+              value={formData.district}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="District"
+            />
           </div>
+
           <div className="flex flex-col gap-1">
-            <label className={labelClass}>Province <span className="text-red-500">*</span></label>
-            <input name="province" value={formData.province} onChange={handleChange} className={inputClass} placeholder="Province" />
+            <label className={labelClass}>
+              Province <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="province"
+              value={formData.province}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="Province"
+            />
           </div>
+
           <div className="flex flex-col gap-1">
             <label className={labelClass}>Postal Code</label>
-            <input name="postalCode" value={formData.postalCode} onChange={handleChange} className={inputClass} placeholder="10200" />
+            <input
+              name="postalCode"
+              value={formData.postalCode}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="10200"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className={labelClass}>
+              Latitude <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="latitude"
+              value={formData.latitude}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="13.7563"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className={labelClass}>
+              Longitude <span className="text-red-500">*</span>
+            </label>
+            <input
+              name="longitude"
+              value={formData.longitude}
+              onChange={handleChange}
+              className={inputClass}
+              placeholder="100.5018"
+            />
           </div>
         </div>
       </section>

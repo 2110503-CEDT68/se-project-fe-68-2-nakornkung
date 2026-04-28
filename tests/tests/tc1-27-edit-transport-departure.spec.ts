@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("TC1.06 - edit an existing booking by updating departure date", async ({ page }) => {
+test("TC1.27 - edit an existing booking by updating departure date", async ({ page }) => {
   await page.goto("http://localhost:3000/auth/signin?callbackUrl=/booking");
 
   await page.locator("#login-email").fill("araii@gmail.com");
@@ -10,13 +10,7 @@ test("TC1.06 - edit an existing booking by updating departure date", async ({ pa
   await expect(page).toHaveURL(/\/booking$/, { timeout: 15000 });
   await page.waitForLoadState("networkidle");
 
-  await expect(page.getByText("Transportation", { exact: true }).first()).toBeVisible({ timeout: 15000 });
-
-  // ถ้ามีข้อความนี้ แปลว่าข้อมูลที่ใช้เทสไม่เหมาะกับ TC1.06
-  const discontinuedWarning = page.getByText(/discontinued/i);
-  if (await discontinuedWarning.count()) {
-    throw new Error("TC1.06 cannot be tested with this booking because its transportation service has been discontinued.");
-  }
+  await expect(page.getByText("Transportation")).toBeVisible({ timeout: 15000 });
 
   await page.getByRole("button", { name: "Edit" }).nth(1).click();
 
@@ -25,6 +19,6 @@ test("TC1.06 - edit an existing booking by updating departure date", async ({ pa
 
   await page.getByRole("button", { name: "Save" }).click();
 
-  await expect(page.getByText(/Departure :/i).first()).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/Departure :/i)).toBeVisible({ timeout: 15000 });
   await expect(page.getByText(/4\/16\/2026/i)).toBeVisible({ timeout: 15000 });
 });

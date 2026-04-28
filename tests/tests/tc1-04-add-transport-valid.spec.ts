@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("TC1.04 - add a transportation with valid departure date and passenger count", async ({ page }) => {
-  const hotelId = "69c16f5e699eaa901a4af472";
+  const hotelId = "69f0591361cfe469eefd76cb";
 
   await page.goto(`http://localhost:3000/auth/signin?callbackUrl=/book?hotel=${hotelId}`);
 
