@@ -234,11 +234,16 @@ export default function BookingCard({
                   className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm dark:border-[#3a3360] dark:bg-[#1f1a35]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
-                    <span className="font-semibold text-slate-800 dark:text-[#f5f3ff]">
-                      {tb.transportation.name}
-                      <span className="ml-2 font-normal capitalize text-slate-400 dark:text-[#9d97bc]">
+                    <span className="font-semibold text-slate-800 dark:text-[#f5f3ff] flex gap-2">
+                      {tb.transportation.name} by {tb.transportation.providerName ?? "Unknown provider"}
+                      <span className="font-normal capitalize text-slate-400 dark:text-[#9d97bc]">
                         ({tb.transportation.type})
                       </span>
+                      {!tb.transportation.active && (
+                        <span className="text-red-500 dark:text-red-400 font-bold">
+                          !! This transportation service has been discontinued !!
+                        </span>
+                      )}
                     </span>
                     <span className="font-medium text-indigo-600 dark:text-[#a89fd4]">
                       ฿{tb.transportation.price.toLocaleString()}

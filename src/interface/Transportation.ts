@@ -23,5 +23,6 @@ export interface Transportation {
   dropOffArea: Location;
   price: number;
   img: string;
+  active: boolean;
   createAt: string;
 }

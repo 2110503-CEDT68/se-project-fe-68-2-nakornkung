@@ -205,13 +205,24 @@ export default function TransportationBookingSection({
               >
                 {/* Transport info */}
                 <div className="font-semibold text-sm text-slate-800 dark:text-[#f5f3ff]">
-                  <div>{t.name}</div>
-                  <div> by {t.providerName ?? ""} ({capitalize(t.type)})</div>
+                  <div className="flex gap-2">
+                    <span>
+                      {t.name} by {t.providerName ?? "Unknown provider"}
+                    </span>
+                    <span className="font-normal text-slate-400 dark:text-[#9d97bc]">
+                      ({capitalize(t.type)})
+                    </span>
+                    {!t.active && (
+                      <span className="text-red-500 dark:text-red-400 font-bold">
+                        !! This transportation service has been discontinued !!
+                      </span>
+                    )}
+                  </div>
                   {t.pickUpArea && t.dropOffArea && (
-                    <>
-                      : <TransportLocationTooltip location={t.pickUpArea} /> to{" "}
+                    <div>
+                      <TransportLocationTooltip location={t.pickUpArea} /> to{" "}
                       <TransportLocationTooltip location={t.dropOffArea} />
-                    </>
+                    </div>
                   )}
                 </div>
 
@@ -293,7 +304,8 @@ export default function TransportationBookingSection({
                       <button
                         type="button"
                         onClick={() => handleStartEdit(tb)}
-                        className="rounded-xl bg-indigo-700 px-5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 dark:bg-[#6f648f] dark:hover:bg-[#7d72a0]"
+                        disabled={!tb.transportation.active}
+                        className="rounded-xl bg-indigo-700 px-5 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-500 dark:bg-[#6f648f] dark:hover:bg-[#7d72a0] disabled:cursor-not-allowed disabled:bg-slate-300 dark:disabled:bg-[#4a4365]"
                       >
                         Edit
                       </button>
