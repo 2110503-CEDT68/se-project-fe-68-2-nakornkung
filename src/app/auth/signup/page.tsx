@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import register from "@/lib/user/register";
+import Link from "next/link";
 
 export default function SignUpPage() {
   const searchParams = useSearchParams();
@@ -112,7 +113,16 @@ export default function SignUpPage() {
             required
           />
         </div>
-        <button className="mt-4 py-4 rounded-full bg-primary hover:bg-accent cursor-pointer font-bold text-white text-lg dark:bg-dark-primary dark:hover:bg-dark-primary-0">
+        <div />
+        <div className="flex gap-2">
+          <input
+            id="privacy-policy-agree"
+            type="checkbox"
+            required
+          />
+          <label>I have read and agree to the <Link className="text-blue-600 dark:text-blue-500 underline" href="/privacy-policy" target="_blank">privacy policy</Link></label>
+        </div>
+        <button className="py-4 rounded-full bg-primary hover:bg-accent cursor-pointer font-bold text-white text-lg dark:bg-dark-primary dark:hover:bg-dark-primary-0">
           Sign up
         </button>
         <div className="flex mt-2 gap-1 flex-col space-y-2">
