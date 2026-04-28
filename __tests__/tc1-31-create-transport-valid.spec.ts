@@ -17,7 +17,7 @@ test("TC1.31 - create a new transportation service with complete information", a
   await page.locator('textarea[name="description"]').fill("Transportation created by Playwright test");
   await page.locator('select[name="type"]').selectOption({ label: "Airplane" });
   await page.locator('input[name="price"]').fill("1500");
-  await page.locator('input[name="img"]').fill("https://example.com/plane.jpg");
+  await page.locator('input[name="img"]').fill("https://drive.google.com/uc?id=10MYzKJ28XwM5BnWIVafP4o4kE8RhqsOY");
 
   await page.locator('input[name="pickUpName"]').fill("Don Mueang Airport");
   await page.locator('input[name="pickUpAddress"]').fill("Vibhavadi Rangsit Road");

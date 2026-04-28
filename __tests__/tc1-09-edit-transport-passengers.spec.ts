@@ -12,12 +12,19 @@ test("TC1.09 - edit an existing booking by updating number of passengers", async
 
   await expect(page.getByText("Transportation")).toBeVisible({ timeout: 15000 });
 
-  await page.getByRole("button", { name: "Edit" }).nth(1).click();
+  // booking
+  await page.getByRole("button", { name: "Edit" }).first().click();
+  
+  // transportation booking
+  await page.getByRole("button", { name: "Edit" }).first().click();
 
-  await page.locator('input[type="number"]').fill("2");
+  await page.locator('input[type="number"]').nth(1).fill("2");
 
-  await page.getByRole("button", { name: "Save" }).click();
+  // transportation booking
+  await page.getByRole("button", { name: "Save" }).first().click();
+  
+  // booking
+  await page.getByRole("button", { name: "Save" }).first().click();
 
-  await expect(page.getByText(/Passengers :/i)).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText(/Passengers : 2/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/Passengers : 2/i).first()).toBeVisible({ timeout: 15000 });
 });

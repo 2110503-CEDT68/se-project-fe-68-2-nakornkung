@@ -12,13 +12,21 @@ test("TC1.08 - edit an existing booking by updating departure date", async ({ pa
 
   await expect(page.getByText("Transportation")).toBeVisible({ timeout: 15000 });
 
-  await page.getByRole("button", { name: "Edit" }).nth(1).click();
+  // booking
+  await page.getByRole("button", { name: "Edit" }).first().click();
+
+  // transportation booking
+  await page.getByRole("button", { name: "Edit" }).first().click();
 
   const newDeparture = "2026-04-16T15:45";
   await page.locator('input[type="datetime-local"]').fill(newDeparture);
 
-  await page.getByRole("button", { name: "Save" }).click();
+  // transportation booking
+  await page.getByRole("button", { name: "Save" }).first().click();
 
-  await expect(page.getByText(/Departure :/i)).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText(/4\/16\/2026/i)).toBeVisible({ timeout: 15000 });
+  // booking
+  await page.getByRole("button", { name: "Save" }).first().click();
+
+  await expect(page.getByText(/Departure :/i).first()).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/4\/16\/2026/i).first()).toBeVisible({ timeout: 15000 });
 });

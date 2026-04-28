@@ -11,12 +11,13 @@ test("TC1.35 - delete a transportation service that has no active bookings", asy
   await page.waitForLoadState("networkidle");
 
   // ควรใช้ชื่อ transport ที่แน่ใจว่าไม่มี active bookings
-  const transportName = "PW Transport Delete Safe";
+  const transportName = "PW Transport";
 
   await page.getByPlaceholder("Transport Name").fill(transportName);
   await page.waitForTimeout(1200);
   await page.waitForLoadState("networkidle");
 
+  const transportCount = await page.getByText(transportName).count();
   await expect(page.getByText(transportName).first()).toBeVisible({ timeout: 15000 });
 
   page.once("dialog", async (dialog) => {
@@ -26,5 +27,8 @@ test("TC1.35 - delete a transportation service that has no active bookings", asy
 
   await page.getByRole("button", { name: "Delete" }).first().click();
 
-  await expect(page.getByText(transportName)).not.toBeVisible({ timeout: 15000 });
+  await page.waitForTimeout(1200);
+  await page.waitForLoadState("networkidle");
+
+  expect(await page.getByText(transportName).count()).toBe(transportCount - 1);
 });

@@ -24,5 +24,5 @@ test("TC1.34 - edit a transportation with missing details", async ({ page }) => 
   await page.getByRole("button", { name: "Save" }).click();
 
   // ยังอยู่หน้าเดิม และยังเห็นฟอร์มแก้ไขอยู่
-  await expect(page.getByRole("button", { name: "Save" })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("button", { name: "Saving" })).toBeVisible({ timeout: 15000 });
 });

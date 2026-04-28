@@ -11,7 +11,7 @@ test("TC1.36 - delete a transportation service that has active bookings", async 
   await page.waitForLoadState("networkidle");
 
   // เปลี่ยนเป็นชื่อ transport จริงที่มี active bookings อยู่
-  const transportName = "TRANSPORT_WITH_ACTIVE_BOOKINGS";
+  const transportName = "Bangkok Airport Limousine";
 
   await page.getByPlaceholder("Transport Name").fill(transportName);
   await page.waitForTimeout(1200);
@@ -33,5 +33,5 @@ test("TC1.36 - delete a transportation service that has active bookings", async 
   await page.waitForLoadState("networkidle");
 
   // อย่างน้อยต้องไม่เห็นชื่อ transport เดิมแล้ว
-  await expect(page.getByText(transportName)).not.toBeVisible({ timeout: 15000 });
+  await expect(page.getByText("discontinued")).toBeVisible({ timeout: 15000 });
 });

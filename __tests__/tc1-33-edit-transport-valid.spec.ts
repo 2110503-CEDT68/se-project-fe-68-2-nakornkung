@@ -10,13 +10,19 @@ test("TC1.33 - edit a transportation with valid updates", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/transport$/, { timeout: 15000 });
   await page.waitForLoadState("networkidle");
 
+  const transportName = "PW Transport";
+
+  await page.getByPlaceholder("Transport Name").fill(transportName);
+  await page.waitForTimeout(1200);
+  await page.waitForLoadState("networkidle");
+
   // ต้องมี transport อย่างน้อย 1 อัน
   await expect(page.getByRole("button", { name: "Edit" }).first()).toBeVisible({ timeout: 15000 });
 
   // เข้าโหมดแก้ไข transport อันแรก
   await page.getByRole("button", { name: "Edit" }).first().click();
 
-  const updatedName = `Edited Transport ${Date.now()}`;
+  const updatedName = `Edited PW Transport ${Date.now()}`;
 
   // แก้ข้อมูลแบบ valid
   await page.locator('input[name="name"]').fill(updatedName);
@@ -29,6 +35,6 @@ test("TC1.33 - edit a transportation with valid updates", async ({ page }) => {
 
   // เช็กว่าบันทึกแล้ว และกลับมาแสดงผลโหมดปกติ
   await expect(page.getByText(updatedName)).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText(/Updated Provider/i)).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText(/2500฿/i)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/Updated Provider/i).first()).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/2500฿/i).first()).toBeVisible({ timeout: 15000 });
 });
