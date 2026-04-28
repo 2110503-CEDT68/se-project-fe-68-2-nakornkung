@@ -2,7 +2,7 @@ import { Transportation } from "@/interface/Transportation";
 import { BACKEND_URL } from "../consts";
 import { ApiResponse } from "@/interface/ApiResponse";
 
-export default async function createTransportation( transportation: Omit<Transportation, "_id" | "createAt">, token: string ): Promise<ApiResponse<Transportation>> {
+export default async function createTransportation( transportation: Omit<Transportation, "_id" | "active" | "createAt">, token: string ): Promise<ApiResponse<Transportation>> {
     try {
         const response = await fetch(`${BACKEND_URL}/api/v1/transportations`, {
             method: 'POST',
