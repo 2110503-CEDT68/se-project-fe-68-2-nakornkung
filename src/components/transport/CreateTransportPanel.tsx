@@ -32,7 +32,7 @@ export default function CreateTransportPanel() {
         if (!session) return;
         setLoading(true);
 
-        const transportation: Omit<Transportation, "_id" | "createAt"> = {
+        const transportation: Omit<Transportation, "_id" | "active" | "createAt"> = {
             name: transportForm.get("name") as string,
             description: transportForm.get("description") as string,
             type: transportForm.get("type") as TransportationType,
